@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dataset>
+    <DOCUMENT_TEMPLATES template_id="0" template_name="template#1"/>
+    <DOCUMENT_TEMPLATES template_id="1" template_name="template#2"/>
+    <DOCUMENT_TEMPLATES template_id="2" template_name="template#3"/>
+
+    <FIELDS_INFO
+            template_id="0"
+            field_id="1"
+            technical_name="field#1"
+            display_name="some field"
+            type="INPUT"
+    />
+    <FIELDS_INFO
+            template_id="0"
+            field_id="2"
+            technical_name="field#2"
+            display_name="some field 2"
+            type="CHECKBOX"
+    />
+    <FIELDS_INFO
+            template_id="0"
+            field_id="3"
+            technical_name="field#3"
+            display_name="some field 3"
+            type="TEXTAREA"
+    />
+</dataset>

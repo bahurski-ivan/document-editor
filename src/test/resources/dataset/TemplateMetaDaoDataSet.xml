@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset>
+    <DOCUMENT_TEMPLATES template_id="1" template_name="template#1"/>
+    <DOCUMENT_TEMPLATES template_id="2" template_name="template#2"/>
+    <DOCUMENT_TEMPLATES template_id="3" template_name="template#3"/>
+</dataset>
