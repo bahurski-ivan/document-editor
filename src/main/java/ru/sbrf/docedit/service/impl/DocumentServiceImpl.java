@@ -2,11 +2,13 @@ package ru.sbrf.docedit.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.DocumentMetaDao;
 import ru.sbrf.docedit.dao.FieldMetaDao;
 import ru.sbrf.docedit.dao.FieldOrdinalsDao;
 import ru.sbrf.docedit.dao.FieldValueDao;
+import ru.sbrf.docedit.exception.NoSuchEntityException;
 import ru.sbrf.docedit.model.document.DocumentFull;
 import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.field.Field;
@@ -27,7 +29,7 @@ import java.util.stream.IntStream;
  * Created by SBT-Bakhurskiy-IA on 13.02.2017.
  */
 @Component
-@Transactional
+@Transactional(isolation = Isolation.READ_COMMITTED)
 public class DocumentServiceImpl implements DocumentService {
     private final DocumentMetaDao documentMetaDao;
     private final FieldValueDao fieldValueDao;
@@ -45,8 +47,6 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public DocumentMeta create(long templateId, String documentName) {
         final long id = documentMetaDao.createDocument(new DocumentMeta(-1, templateId, documentName));
-//        final List<FieldMeta> templateFields = fieldMetaDao.listFields(templateId);
-//        templateFields.forEach(m -> fieldValueDao.createFieldValue(new Field(m.getFieldId(), id, null)));
         return new DocumentMeta(id, templateId, documentName);
     }
 
@@ -57,12 +57,8 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public DocumentMeta update(long documentId, String documentName) {
-        final Optional<DocumentMeta> meta = documentMetaDao.get(documentId);
-
-        if (!meta.isPresent())
-            return null;
-
-        final DocumentMeta newMeta = new DocumentMeta(documentId, meta.get().getTemplateId(), documentName);
+        final DocumentMeta meta = documentMetaDao.get(documentId).orElseThrow(NoSuchEntityException::new);
+        final DocumentMeta newMeta = new DocumentMeta(documentId, meta.getTemplateId(), documentName);
         documentMetaDao.updateDocument(newMeta);
         return newMeta;
     }
@@ -80,6 +76,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.SERIALIZABLE)
     public Optional<DocumentFull> getFull(long documentId) {
         final Optional<DocumentMeta> dd = documentMetaDao.get(documentId);
 
@@ -116,6 +113,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<DocumentMeta> listForTemplate(int templateId, int pageNo, int pageSize, Order order) {
         return documentMetaDao.listForTemplate(templateId, pageNo, pageSize, order);
     }

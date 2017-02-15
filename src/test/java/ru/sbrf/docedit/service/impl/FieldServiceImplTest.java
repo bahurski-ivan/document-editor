@@ -6,6 +6,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.sbrf.docedit.AbstractDbTest;
+import ru.sbrf.docedit.exception.NoSuchEntityException;
 import ru.sbrf.docedit.model.field.FieldFull;
 import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.field.value.*;
@@ -109,4 +110,8 @@ public class FieldServiceImplTest extends AbstractDbTest {
         assertEquals(fieldService.getAll(1), fields);
     }
 
+    @Test(expected = NoSuchEntityException.class)
+    public void updateNonExistent() throws Exception {
+        fieldService.update(10000, "a", "b", FieldType.INPUT, -10);
+    }
 }

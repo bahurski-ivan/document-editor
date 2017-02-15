@@ -4,7 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.FieldOrdinalsDao;
+import ru.sbrf.docedit.exception.NoSuchEntityException;
 import ru.sbrf.docedit.util.SerializationHelper;
 
 import java.sql.ResultSet;
@@ -43,6 +46,7 @@ public class H2FieldOrdinalsDao implements FieldOrdinalsDao {
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void update(long templateId, long fieldId, int ordinal) {
         final List<Long> orderedIds = getOrderedFields(templateId);
         final int oldIndex = orderedIds.indexOf(fieldId);
@@ -58,8 +62,11 @@ public class H2FieldOrdinalsDao implements FieldOrdinalsDao {
     @Override
     public void updateBatch(long templateId, List<Long> orderedFieldsIds) {
         Objects.requireNonNull(orderedFieldsIds);
-        final String sql = "UPDATE FIELDS_ORDINALS SET ordinals=?";
-        int result = jdbcTemplate.update(sql, SerializationHelper.writeObject(orderedFieldsIds));
+        final String sql = "UPDATE FIELDS_ORDINALS SET ordinals=? WHERE template_id=?";
+        int result = jdbcTemplate.update(sql, SerializationHelper.writeObject(orderedFieldsIds), templateId);
+
+        if (result != 1)
+            throw new NoSuchEntityException(templateId);
     }
 
     @Override

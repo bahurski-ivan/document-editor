@@ -5,6 +5,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.DocumentMetaDao;
 import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.pagination.Order;
@@ -88,6 +90,7 @@ public class H2DocumentMetaDao implements DocumentMetaDao {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.SERIALIZABLE)
     public Page<DocumentMeta> listPaged(int pageNo, int pageSize, Order order) {
         String sql = "SELECT COUNT(*) FROM DOCUMENTS";
         final List<Integer> queryResult = jdbcTemplate.query(sql, (rs, rn) -> rs.getInt(1));
@@ -106,6 +109,7 @@ public class H2DocumentMetaDao implements DocumentMetaDao {
     }
 
     @Override
+    @Transactional(readOnly = true, isolation = Isolation.SERIALIZABLE)
     public Page<DocumentMeta> listForTemplate(long templateId, int pageNo, int pageSize, Order order) {
         String sql = "SELECT COUNT(*) FROM DOCUMENTS WHERE template_id=?";
         final List<Integer> queryResult = jdbcTemplate.query(sql, (rs, rn) -> rs.getInt(1), templateId);
