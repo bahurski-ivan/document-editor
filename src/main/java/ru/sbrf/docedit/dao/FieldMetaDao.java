@@ -38,5 +38,8 @@ public interface FieldMetaDao {
      */
     boolean updateFieldMeta(FieldMeta fieldMeta);
 
+    /**
+     * Returns field with given {@code fieldId}.
+     */
     Optional<FieldMeta> get(long fieldId);
 }

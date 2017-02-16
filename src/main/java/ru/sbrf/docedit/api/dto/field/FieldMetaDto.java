@@ -1,4 +1,4 @@
-package ru.sbrf.docedit.api.dto;
+package ru.sbrf.docedit.api.dto.field;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotBlank;
@@ -35,13 +35,18 @@ public class FieldMetaDto {
     @JsonProperty(value = "field_type", required = true)
     private FieldType type;
 
+    @NotNull
+    @JsonProperty(value = "field_ordinal", required = true)
+    private int ordinal;
 
-    public FieldMetaDto(long fieldId, long templateId, String technicalName, String displayName, FieldType type) {
+
+    public FieldMetaDto(long fieldId, Long templateId, String technicalName, String displayName, FieldType type, int ordinal) {
         this.fieldId = fieldId;
         this.templateId = templateId;
         this.technicalName = technicalName;
         this.displayName = displayName;
         this.type = type;
+        this.ordinal = ordinal;
     }
 
     public FieldMetaDto() {
@@ -49,11 +54,12 @@ public class FieldMetaDto {
 
 
     public static FieldMetaDto toDto(FieldMeta fieldMeta) {
-        return new FieldMetaDto(fieldMeta.getFieldId(), fieldMeta.getTemplateId(), fieldMeta.getTechnicalName(), fieldMeta.getDisplayName(), fieldMeta.getType());
+        return new FieldMetaDto(fieldMeta.getFieldId(), fieldMeta.getTemplateId(), fieldMeta.getTechnicalName(), fieldMeta.getDisplayName(),
+                fieldMeta.getType(), fieldMeta.getOrdinal());
     }
 
     public static FieldMeta fromDto(FieldMetaDto dto) {
-        return new FieldMeta(dto.getFieldId(), dto.getTemplateId(), dto.getTechnicalName(), dto.getDisplayName(), dto.getType());
+        return new FieldMeta(dto.getFieldId(), dto.getTemplateId(), dto.getTechnicalName(), dto.getDisplayName(), dto.getType(), dto.getOrdinal());
     }
 
 
@@ -67,6 +73,10 @@ public class FieldMetaDto {
 
     public long getTemplateId() {
         return templateId;
+    }
+
+    public void setTemplateId(Long templateId) {
+        this.templateId = templateId;
     }
 
     public void setTemplateId(long templateId) {
@@ -97,6 +107,14 @@ public class FieldMetaDto {
         this.type = type;
     }
 
+    public int getOrdinal() {
+        return ordinal;
+    }
+
+    public void setOrdinal(int ordinal) {
+        this.ordinal = ordinal;
+    }
+
     @Override
     public String toString() {
         return "FieldMetaDto{" +
@@ -105,6 +123,7 @@ public class FieldMetaDto {
                 ", technicalName='" + technicalName + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", type=" + type +
+                ", ordinal=" + ordinal +
                 '}';
     }
 }

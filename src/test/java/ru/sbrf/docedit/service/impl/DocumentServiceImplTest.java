@@ -79,9 +79,9 @@ public class DocumentServiceImplTest extends AbstractDbTest {
         final DocumentFull expected = new DocumentFull(1, 1,
                 "document#1",
                 Arrays.asList(
-                        new FieldFull(new FieldMeta(2, 1, "field#2", "field#2", FieldType.CHECKBOX),
+                        new FieldFull(new FieldMeta(2, 1, "field#2", "field#2", FieldType.CHECKBOX, 0),
                                 new CheckboxValue(true)),
-                        new FieldFull(new FieldMeta(1, 1, "field#1", "field#1", FieldType.INPUT),
+                        new FieldFull(new FieldMeta(1, 1, "field#1", "field#1", FieldType.INPUT, 0),
                                 new InputValue("hello"))
                 )
         );

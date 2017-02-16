@@ -18,6 +18,7 @@ import ru.sbrf.docedit.service.TemplateService;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -84,10 +85,20 @@ public class TemplateServiceImpl implements TemplateService {
                     .collect(Collectors.toMap(orderedIds::get, i -> i));
             final List<FieldMeta> metaList = fieldMetaDao.listFields(templateId);
 
+            assert ((Supplier<Boolean>) () -> {
+                for (FieldMeta m : metaList)
+                    if (!fieldIdIndexMap.containsKey(m.getFieldId()))
+                        return false;
+                return true;
+            }).get();
+
             assert orderedIds.size() == metaList.size();
 
             return Optional.of(new TemplateFull(meta.getTemplateId(), meta.getTemplateName(),
                     metaList.stream().sorted((f1, f2) -> {
+                        assert f1 != null;
+                        assert f2 != null;
+
                         final int i1 = fieldIdIndexMap.get(f1.getFieldId());
                         final int i2 = fieldIdIndexMap.get(f2.getFieldId());
                         return Integer.compare(i1, i2);

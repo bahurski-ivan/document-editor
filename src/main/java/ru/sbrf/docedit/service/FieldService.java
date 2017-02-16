@@ -44,7 +44,7 @@ public interface FieldService {
      * Field is appended to the end of template, so ordinal of this
      * field is equal to previous last field in this template.
      *
-     * @param templateId    id of template to add this field
+     * @param templateId    id of template to append this field
      * @param technicalName technical name of the field
      * @param displayName   field name that will be displayed to the user
      * @param type          type of field

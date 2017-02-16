@@ -1,4 +1,4 @@
-package ru.sbrf.docedit.api.dto;
+package ru.sbrf.docedit.api.dto.field.update;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotBlank;

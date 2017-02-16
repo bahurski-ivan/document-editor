@@ -10,10 +10,19 @@ public interface FieldOrdinalsDao {
      * Creates ordinal record for {@code fieldId} in template with {@code templateId}.
      *
      * @param templateId id of field holder template
-     * @param fieldId    id of field to add
+     * @param fieldId    id of field to append
      * @param ordinal    position inside template
      */
     void create(long templateId, long fieldId, int ordinal);
+
+    /**
+     * Appends field id to the end of ordinals record.
+     *
+     * @param templateId id of field holder template
+     * @param fieldId    id of field to append
+     * @return ordinal assigned to this fieldId
+     */
+    int append(long templateId, long fieldId);
 
     /**
      * Updates field ordinal.

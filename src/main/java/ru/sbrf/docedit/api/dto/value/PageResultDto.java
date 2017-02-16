@@ -1,4 +1,4 @@
-package ru.sbrf.docedit.api.dto;
+package ru.sbrf.docedit.api.dto.value;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.sbrf.docedit.model.pagination.Page;

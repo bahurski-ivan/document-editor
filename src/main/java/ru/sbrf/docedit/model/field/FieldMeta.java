@@ -13,8 +13,21 @@ public class FieldMeta {
     private final String technicalName;
     private final String displayName;
     private final FieldType type;
+    private final int ordinal;
 
+    /**
+     * Create field meta with {@code Integer.MAX_VALUE} ordinal.
+     */
     public FieldMeta(long fieldId, long templateId, String technicalName, String displayName, FieldType type) {
+        this.fieldId = fieldId;
+        this.templateId = templateId;
+        this.technicalName = technicalName;
+        this.displayName = displayName;
+        this.type = type;
+        this.ordinal = Integer.MAX_VALUE;
+    }
+
+    public FieldMeta(long fieldId, long templateId, String technicalName, String displayName, FieldType type, int ordinal) {
         Objects.requireNonNull(technicalName);
         Objects.requireNonNull(displayName);
         Objects.requireNonNull(type);
@@ -24,6 +37,7 @@ public class FieldMeta {
         this.technicalName = technicalName;
         this.displayName = displayName;
         this.type = type;
+        this.ordinal = ordinal;
     }
 
     public FieldType getType() {
@@ -46,6 +60,10 @@ public class FieldMeta {
         return templateId;
     }
 
+    public int getOrdinal() {
+        return ordinal;
+    }
+
     @Override
     public String toString() {
         return "FieldMeta{" +
@@ -54,6 +72,7 @@ public class FieldMeta {
                 ", technicalName='" + technicalName + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", type=" + type +
+                ", ordinal=" + ordinal +
                 '}';
     }
 
@@ -66,6 +85,7 @@ public class FieldMeta {
 
         if (fieldId != meta.fieldId) return false;
         if (templateId != meta.templateId) return false;
+        if (ordinal != meta.ordinal) return false;
         if (!technicalName.equals(meta.technicalName)) return false;
         if (!displayName.equals(meta.displayName)) return false;
         return type == meta.type;
@@ -79,6 +99,7 @@ public class FieldMeta {
         result = 31 * result + technicalName.hashCode();
         result = 31 * result + displayName.hashCode();
         result = 31 * result + type.hashCode();
+        result = 31 * result + ordinal;
         return result;
     }
 }

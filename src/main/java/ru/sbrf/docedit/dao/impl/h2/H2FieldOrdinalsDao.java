@@ -12,6 +12,7 @@ import ru.sbrf.docedit.util.SerializationHelper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +30,27 @@ public class H2FieldOrdinalsDao implements FieldOrdinalsDao {
     }
 
     @Override
+    public int append(long templateId, long fieldId) {
+        int ordinal = 0;
+        String sql = "SELECT template_id, ordinals FROM FIELDS_ORDINALS WHERE template_id=?";
+        final List<List<Long>> queriedResult = jdbcTemplate.query(sql, FieldsOrdinalsRowMapper.INSTANCE, templateId);
+        assert queriedResult.size() <= 1;
+
+        if (queriedResult.isEmpty()) {
+            sql = "INSERT INTO FIELDS_ORDINALS (template_id, ordinals) VALUES (?, ?)";
+            int result = jdbcTemplate.update(sql, templateId,
+                    SerializationHelper.writeObject(Collections.singletonList(fieldId)));
+        } else {
+            final List<Long> orderedIds = queriedResult.get(0);
+            ordinal = orderedIds.size();
+            orderedIds.add(ordinal, fieldId);
+            updateBatch(templateId, orderedIds);
+        }
+
+        return ordinal;
+    }
+
+    @Override
     public void create(long templateId, long fieldId, int ordinal) {
         String sql = "SELECT template_id, ordinals FROM FIELDS_ORDINALS WHERE template_id=?";
         final List<List<Long>> queriedResult = jdbcTemplate.query(sql, FieldsOrdinalsRowMapper.INSTANCE, templateId);
@@ -36,7 +58,8 @@ public class H2FieldOrdinalsDao implements FieldOrdinalsDao {
 
         if (queriedResult.isEmpty()) {
             sql = "INSERT INTO FIELDS_ORDINALS (template_id, ordinals) VALUES (?, ?)";
-            int result = jdbcTemplate.update(sql, templateId, Collections.singletonList(fieldId));
+            int result = jdbcTemplate.update(sql, templateId,
+                    SerializationHelper.writeObject(Collections.singletonList(fieldId)));
         } else {
             final List<Long> orderedIds = queriedResult.get(0);
             ordinal = adjustOrdinal(ordinal, orderedIds.size());
@@ -63,7 +86,12 @@ public class H2FieldOrdinalsDao implements FieldOrdinalsDao {
     public void updateBatch(long templateId, List<Long> orderedFieldsIds) {
         Objects.requireNonNull(orderedFieldsIds);
         final String sql = "UPDATE FIELDS_ORDINALS SET ordinals=? WHERE template_id=?";
-        int result = jdbcTemplate.update(sql, SerializationHelper.writeObject(orderedFieldsIds), templateId);
+
+        int result = jdbcTemplate.update(sql,
+                SerializationHelper.writeObject(
+                        orderedFieldsIds instanceof ArrayList ?
+                                orderedFieldsIds : new ArrayList<>(orderedFieldsIds)),
+                templateId);
 
         if (result != 1)
             throw new NoSuchEntityException(templateId);
@@ -74,7 +102,13 @@ public class H2FieldOrdinalsDao implements FieldOrdinalsDao {
         final String sql = "SELECT template_id, ordinals FROM FIELDS_ORDINALS WHERE template_id=?";
         final List<List<Long>> queriedResult = jdbcTemplate.query(sql, FieldsOrdinalsRowMapper.INSTANCE, templateId);
         assert queriedResult.size() <= 1;
-        return queriedResult.isEmpty() ? Collections.emptyList() : queriedResult.get(0);
+
+        if (!queriedResult.isEmpty()) {
+            final List<Long> result = queriedResult.get(0);
+            assert result instanceof ArrayList;
+            return result;
+        } else
+            return new ArrayList<>();
     }
 
     @Override

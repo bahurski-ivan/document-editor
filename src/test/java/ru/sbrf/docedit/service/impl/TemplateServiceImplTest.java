@@ -85,5 +85,4 @@ public class TemplateServiceImplTest extends AbstractDbTest {
 
         assertEquals(expected, templateFull);
     }
-
 }

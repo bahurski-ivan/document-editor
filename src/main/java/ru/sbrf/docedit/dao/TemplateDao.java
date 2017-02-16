@@ -53,7 +53,7 @@ public interface TemplateDao {
      * Adds new fields to template.
      *
      * @param templateId id of target template
-     * @param fields     fields to add
+     * @param fields     fields to append
      * @return {@code true} if addiction end up successfully
      */
     boolean addFieldsToTemplate(long templateId, List<FieldMeta> fields);

@@ -62,7 +62,7 @@ public class FieldServiceImplTest extends AbstractDbTest {
 
     @Test
     public void create() throws Exception {
-        final FieldMeta expected = new FieldMeta(0, 2, "field#0", "field#0", FieldType.INPUT);
+        final FieldMeta expected = new FieldMeta(0, 2, "field#0", "field#0", FieldType.INPUT, 0);
         final FieldMeta created = fieldService.create(2, "field#0", "field#0", FieldType.INPUT);
         final FieldMeta saved = fieldService.getOne(0).orElse(null);
         assertEquals(expected, created);
@@ -71,7 +71,26 @@ public class FieldServiceImplTest extends AbstractDbTest {
 
     @Test
     public void update() throws Exception {
-        final FieldMeta expected = new FieldMeta(1, 1, "field#1_NV", "field#1_NV", FieldType.TEXTAREA);
+        final FieldMeta expected = new FieldMeta(1, 1, "field#1_NV", "field#1_NV", FieldType.TEXTAREA, 0);
+        final FieldMeta updated = fieldService.update(1, "field#1_NV", "field#1_NV", FieldType.TEXTAREA, -1000);
+        final FieldMeta saved = fieldService.getOne(1).orElse(null);
+        final FieldFull documentField = fieldService.getDocumentField(1, 1).orElse(null);
+
+        assertEquals(expected, saved);
+        assertEquals(expected, updated);
+        assertEquals(documentField.getValue(), new TextAreaValue("hello"));
+        assertEquals(documentField.getMeta(), expected);
+
+        final TemplateFull full = templateService.getFull(1).orElse(null);
+
+        assertNotNull(full);
+        assertThat(full.getFields().size(), org.hamcrest.CoreMatchers.not(CoreMatchers.equalTo(0)));
+        assertEquals(full.getFields().get(0), expected);
+    }
+
+    @Test
+    public void updateOrdinalsTest() throws Exception {
+        final FieldMeta expected = new FieldMeta(1, 1, "field#1_NV", "field#1_NV", FieldType.TEXTAREA, 0);
         final FieldMeta updated = fieldService.update(1, "field#1_NV", "field#1_NV", FieldType.TEXTAREA, -1000);
         final FieldMeta saved = fieldService.getOne(1).orElse(null);
         final FieldFull documentField = fieldService.getDocumentField(1, 1).orElse(null);
@@ -93,20 +112,20 @@ public class FieldServiceImplTest extends AbstractDbTest {
         fieldService.remove(1);
 
         final List<FieldMeta> fields = new ArrayList<>();
-        fields.add(new FieldMeta(2, 1, "field#2", "field#2", FieldType.CHECKBOX));
+        fields.add(new FieldMeta(2, 1, "field#2", "field#2", FieldType.CHECKBOX, 0));
         assertEquals(fieldService.getAll(1), fields);
     }
 
     @Test
     public void getOne() throws Exception {
-        assertEquals(fieldService.getOne(1).orElse(null), new FieldMeta(1, 1, "field#1", "field#1", FieldType.INPUT));
+        assertEquals(fieldService.getOne(1).orElse(null), new FieldMeta(1, 1, "field#1", "field#1", FieldType.INPUT, 0));
     }
 
     @Test
     public void getAll() throws Exception {
         final List<FieldMeta> fields = new ArrayList<>();
-        fields.add(new FieldMeta(1, 1, "field#1", "field#1", FieldType.INPUT));
-        fields.add(new FieldMeta(2, 1, "field#2", "field#2", FieldType.CHECKBOX));
+        fields.add(new FieldMeta(1, 1, "field#1", "field#1", FieldType.INPUT, 0));
+        fields.add(new FieldMeta(2, 1, "field#2", "field#2", FieldType.CHECKBOX, 1));
         assertEquals(fieldService.getAll(1), fields);
     }
 
@@ -114,4 +133,6 @@ public class FieldServiceImplTest extends AbstractDbTest {
     public void updateNonExistent() throws Exception {
         fieldService.update(10000, "a", "b", FieldType.INPUT, -10);
     }
+
+
 }

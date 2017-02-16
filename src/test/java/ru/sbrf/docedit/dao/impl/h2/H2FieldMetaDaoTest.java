@@ -28,7 +28,7 @@ public class H2FieldMetaDaoTest extends AbstractDbTest {
 
     @Test
     public void createFieldMeta() throws Exception {
-        final FieldMeta meta = new FieldMeta(0, TEMPLATE_0_ID, "field1", "something", FieldType.INPUT);
+        final FieldMeta meta = new FieldMeta(0, TEMPLATE_0_ID, "field1", "something", FieldType.INPUT, Integer.MAX_VALUE);
         long id = fieldMetaDao.createFieldMeta(meta);
         final Optional<FieldMeta> saved = fieldMetaDao.get(0);
         assertTrue(saved.isPresent());
@@ -51,7 +51,7 @@ public class H2FieldMetaDaoTest extends AbstractDbTest {
 
     @Test
     public void updateFieldMeta() throws Exception {
-        final FieldMeta expected = new FieldMeta(1, TEMPLATE_0_ID, "field#1", "new value", FieldType.TEXTAREA);
+        final FieldMeta expected = new FieldMeta(1, TEMPLATE_0_ID, "field#1", "new value", FieldType.TEXTAREA, 0);
         assertTrue(fieldMetaDao.updateFieldMeta(expected));
         final Optional<FieldMeta> saved = fieldMetaDao.get(1);
         assertTrue(saved.isPresent());
@@ -61,7 +61,7 @@ public class H2FieldMetaDaoTest extends AbstractDbTest {
     @Test
     public void get() throws Exception {
         final Optional<FieldMeta> ff = fieldMetaDao.get(1);
-        final FieldMeta expected = new FieldMeta(1, TEMPLATE_0_ID, "field#1", "some field", FieldType.INPUT);
+        final FieldMeta expected = new FieldMeta(1, TEMPLATE_0_ID, "field#1", "some field", FieldType.INPUT, 0);
         assertTrue(ff.isPresent());
         assertEquals(ff.get(), expected);
     }

@@ -1,4 +1,4 @@
-package ru.sbrf.docedit.api.dto;
+package ru.sbrf.docedit.api.dto.document;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotBlank;
@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 public class DocumentMetaDto {
     @Min(0)
     @JsonProperty(value = "document_id")
-    private long documentId;
+    private Long documentId;
 
     @NotNull
     @Min(0)
@@ -25,7 +25,8 @@ public class DocumentMetaDto {
     @JsonProperty(value = "document_name", required = true)
     private String documentName;
 
-    public DocumentMetaDto(long documentId, long templateId, String documentName) {
+
+    public DocumentMetaDto(Long documentId, long templateId, String documentName) {
         this.documentId = documentId;
         this.templateId = templateId;
         this.documentName = documentName;
@@ -33,6 +34,7 @@ public class DocumentMetaDto {
 
     public DocumentMetaDto() {
     }
+
 
     public static DocumentMetaDto toDto(DocumentMeta meta) {
         return new DocumentMetaDto(meta.getDocumentId(), meta.getTemplateId(), meta.getDocumentName());
@@ -46,7 +48,7 @@ public class DocumentMetaDto {
         return documentId;
     }
 
-    public void setDocumentId(long documentId) {
+    public void setDocumentId(Long documentId) {
         this.documentId = documentId;
     }
 
@@ -65,6 +67,7 @@ public class DocumentMetaDto {
     public void setDocumentName(String documentName) {
         this.documentName = documentName;
     }
+
 
     @Override
     public String toString() {

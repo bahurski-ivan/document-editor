@@ -72,18 +72,13 @@ public class FieldServiceImpl implements FieldService {
 
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+//    @Transactional(isolation = Isolation.READ_COMMITTED)
     public FieldMeta create(long templateId, String technicalName, String displayName, FieldType type) {
-        final long id = fieldMetaDao.createFieldMeta(new FieldMeta(-1L, templateId, technicalName, displayName, type));
-        final List<Long> ordinals = ordinalsDao.getOrderedFields(templateId);
-        int ordinal = 0;
-
-        if (!ordinals.isEmpty())
-            ordinal = ordinals.size();
-
-        ordinalsDao.update(templateId, id, ordinal);
-
-        return new FieldMeta(id, templateId, technicalName, displayName, type);
+        final long id = fieldMetaDao.createFieldMeta(new FieldMeta(-1L, templateId, technicalName, displayName, type, Integer.MAX_VALUE));
+        return fieldMetaDao.get(id).orElseThrow(NoSuchEntityException::new);
+//        final List<Long> ordinals = ordinalsDao.getOrderedFields(templateId);
+//        ordinalsDao.append(templateId, id);
+//        return new FieldMeta(id, templateId, technicalName, displayName, type);
     }
 
     @Override
@@ -92,57 +87,68 @@ public class FieldServiceImpl implements FieldService {
         final Optional<FieldMeta> m = fieldMetaDao.get(fieldId);
         if (m.isPresent()) {
             final FieldMeta meta = m.get();
-            final List<Long> fieldsIds = ordinalsDao.getOrderedFields(meta.getTemplateId());
-            final FieldMeta result = new FieldMeta(fieldId, meta.getTemplateId(), technicalName, displayName, type);
+//            final List<Long> fieldsIds = ordinalsDao.getOrderedFields(meta.getTemplateId());
+            final FieldMeta result = new FieldMeta(fieldId, meta.getTemplateId(), technicalName, displayName, type, ordinal);
 
-            if (!fieldMetaDao.updateFieldMeta(result))
-                throw new NoSuchEntityException(result.getFieldId());
+            if (fieldMetaDao.updateFieldMeta(result))
+                return result;
 
-            // if type was changed -->
-            // convert document values that have same field to new type (or null if conversion not defined)
-            if (meta.getType() != type)
-                fieldValueDao.listFieldValuesByFieldId(meta.getFieldId())
-                        .stream()
-                        .map(field -> fieldValueDao.getField(field.getDocumentId(), field.getFieldId()).orElse(null))
-                        .filter(field -> field != null && field.getValue() != null)
-                        .forEach(field -> {
-                            final FieldValue oldV = field.getValue();
-                            final FieldValue newV = oldV.convertTo(type);
-                            fieldValueDao.updateFieldValue(new Field(field.getFieldId(), field.getDocumentId(), newV));
-                        });
-
-            if (ordinal < 0)
-                ordinal = 0;
-            if (ordinal > fieldsIds.size())
-                ordinal = fieldsIds.size();
-
-            ordinalsDao.update(meta.getTemplateId(), fieldId, ordinal);
-
-            return result;
+//            final FieldMeta meta = m.get();
+//            final List<Long> fieldsIds = ordinalsDao.getOrderedFields(meta.getTemplateId());
+//            final FieldMeta result = new FieldMeta(fieldId, meta.getTemplateId(), technicalName, displayName, type, ordinal);
+//
+//            if (!fieldMetaDao.updateFieldMeta(result))
+//                throw new NoSuchEntityException(result.getFieldId());
+//
+////            // if type was changed -->
+////            // convert document values that have same field to new type (or null if conversion not defined)
+////            if (meta.getType() != type)
+////                fieldValueDao.listFieldValuesByFieldId(meta.getFieldId())
+////                        .stream()
+////                        .map(field -> fieldValueDao.getField(field.getDocumentId(), field.getFieldId()).orElse(null))
+////                        .filter(field -> field != null && field.getValue() != null)
+////                        .forEach(field -> {
+////                            final FieldValue oldV = field.getValue();
+////                            final FieldValue newV = oldV.convertTo(type);
+////                            fieldValueDao.updateFieldValue(new Field(field.getFieldId(), field.getDocumentId(), newV));
+////                        });
+//
+//            if (ordinal < 0)
+//                ordinal = 0;
+//            if (ordinal > fieldsIds.size())
+//                ordinal = fieldsIds.size();
+//
+//            ordinalsDao.update(meta.getTemplateId(), fieldId, ordinal);
+//
+//            return result;
         }
 
-        throw new NoSuchEntityException();
+        throw new NoSuchEntityException(fieldId);
     }
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void remove(long fieldId) {
-        final Optional<FieldMeta> m = fieldMetaDao.get(fieldId);
+//        final Optional<FieldMeta> m = fieldMetaDao.get(fieldId);
+//
+//        if (m.isPresent()) {
+//            final FieldMeta meta = m.get();
+//            final List<Long> fieldsIds = ordinalsDao.getOrderedFields(meta.getTemplateId());
+//            final int index = fieldsIds.indexOf(fieldId);
+//
+//            if (index != -1) {
+//                fieldsIds.remove((int) index);
+//                ordinalsDao.updateBatch(meta.getTemplateId(), fieldsIds);
+//            }
+//
+//            fieldMetaDao.removeFieldMeta(meta.getFieldId());
+//            return;
+//        }
+//
+//        throw new NoSuchEntityException();
 
-        if (m.isPresent()) {
-            final FieldMeta meta = m.get();
-            final List<Long> fieldsIds = ordinalsDao.getOrderedFields(meta.getTemplateId());
-            final int index = fieldsIds.indexOf(fieldId);
-
-            if (index != -1) {
-                fieldsIds.remove((int) index);
-                ordinalsDao.updateBatch(meta.getTemplateId(), fieldsIds);
-                fieldMetaDao.removeFieldMeta(meta.getFieldId());
-                return;
-            }
-        }
-
-        throw new NoSuchEntityException();
+        if (!fieldMetaDao.removeFieldMeta(fieldId))
+            throw new NoSuchEntityException();
     }
 
     @Override

@@ -24,7 +24,7 @@ public class H2FieldValueDaoTest extends AbstractDbTest {
     private final static List<Field> FIELDS_FOR_DOCUMENT_1 = new ArrayList<>();
 
     static {
-//        FIELDS_FOR_DOCUMENT_1.add(new Field(0, 0, new InputValue("hello")));
+//        FIELDS_FOR_DOCUMENT_1.append(new Field(0, 0, new InputValue("hello")));
         FIELDS_FOR_DOCUMENT_1.add(new Field(1, 1, new CheckboxValue(true)));
         FIELDS_FOR_DOCUMENT_1.add(new Field(2, 1, new TextAreaValue("hello")));
     }

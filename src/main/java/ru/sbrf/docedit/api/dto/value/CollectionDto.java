@@ -1,4 +1,4 @@
-package ru.sbrf.docedit.api.dto;
+package ru.sbrf.docedit.api.dto.value;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -10,10 +10,12 @@ import java.util.stream.Collectors;
  * Created by SBT-Bakhurskiy-IA on 15.02.2017.
  */
 public class CollectionDto<T> {
-    @JsonProperty("items")
-    private Collection<T> collection;
     @JsonProperty("item_count")
     private int itemCount;
+
+    @JsonProperty("items")
+    private Collection<T> collection;
+
 
     public CollectionDto() {
     }

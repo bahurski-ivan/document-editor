@@ -1,6 +1,7 @@
-package ru.sbrf.docedit.api.dto;
+package ru.sbrf.docedit.api.dto.template;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import ru.sbrf.docedit.api.dto.field.FieldMetaDto;
 import ru.sbrf.docedit.model.template.TemplateFull;
 
 import java.util.List;

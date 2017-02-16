@@ -30,7 +30,7 @@ public class H2FieldMetaDao implements FieldMetaDao {
 
     @Override
     public long createFieldMeta(FieldMeta fieldMeta) {
-        final String sql = "INSERT INTO FIELDS_INFO (template_id, technical_name, display_name, type) VALUES (?, ?, ?, ?)";
+        final String sql = "INSERT INTO FIELDS_INFO (template_id, technical_name, display_name, type, ordinal) VALUES (?, ?, ?, ?, ?)";
         final KeyHolder keyHolder = new GeneratedKeyHolder();
 
         int result = jdbcTemplate.update(connection -> {
@@ -39,6 +39,7 @@ public class H2FieldMetaDao implements FieldMetaDao {
             ps.setString(2, fieldMeta.getTechnicalName());
             ps.setString(3, fieldMeta.getDisplayName());
             ps.setString(4, fieldMeta.getType().toString());
+            ps.setInt(5, fieldMeta.getOrdinal());
             return ps;
         }, keyHolder);
 
@@ -48,7 +49,7 @@ public class H2FieldMetaDao implements FieldMetaDao {
 
     @Override
     public List<FieldMeta> listFields(long templateId) {
-        final String sql = "SELECT field_id, template_id, technical_name, display_name, type FROM FIELDS_INFO WHERE template_id=?";
+        final String sql = "SELECT field_id, template_id, technical_name, display_name, type, ordinal FROM FIELDS_INFO WHERE template_id=?";
         return jdbcTemplate.query(sql, FieldMetaRowMapper.INSTANCE, templateId);
     }
 
@@ -67,7 +68,7 @@ public class H2FieldMetaDao implements FieldMetaDao {
 
     @Override
     public boolean updateFieldMeta(FieldMeta fieldMeta) {
-        final String sql = "UPDATE FIELDS_INFO SET template_id=?, technical_name=?, display_name=?, type=? WHERE field_id=?";
+        final String sql = "UPDATE FIELDS_INFO SET template_id=?, technical_name=?, display_name=?, type=?, ordinal=? WHERE field_id=?";
 
         int result = jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -76,6 +77,7 @@ public class H2FieldMetaDao implements FieldMetaDao {
             ps.setString(3, fieldMeta.getDisplayName());
             ps.setString(4, fieldMeta.getType().toString());
             ps.setLong(5, fieldMeta.getFieldId());
+            ps.setInt(6, fieldMeta.getOrdinal());
             return ps;
         });
 
@@ -84,7 +86,7 @@ public class H2FieldMetaDao implements FieldMetaDao {
 
     @Override
     public Optional<FieldMeta> get(long fieldId) {
-        final String sql = "SELECT field_id, template_id, technical_name, display_name, type FROM FIELDS_INFO WHERE field_id=?";
+        final String sql = "SELECT field_id, template_id, technical_name, display_name, type, ordinal FROM FIELDS_INFO WHERE field_id=?";
         final List<FieldMeta> queryResult = jdbcTemplate.query(sql, FieldMetaRowMapper.INSTANCE, fieldId);
         return queryResult.size() == 0 ? Optional.empty() : Optional.of(queryResult.get(0));
     }
@@ -99,7 +101,8 @@ public class H2FieldMetaDao implements FieldMetaDao {
                     rs.getLong("template_id"),
                     rs.getString("technical_name"),
                     rs.getString("display_name"),
-                    FieldType.valueOf(rs.getString("type"))
+                    FieldType.valueOf(rs.getString("type")),
+                    rs.getInt("ordinal")
             );
         }
     }
