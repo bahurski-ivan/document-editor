@@ -42,4 +42,11 @@ public interface FieldMetaDao {
      * Returns field with given {@code fieldId}.
      */
     Optional<FieldMeta> get(long fieldId);
+
+    /**
+     * Returns fields ordinals for given template.
+     *
+     * @return {code Optional.empty()} if there is no template with given {@code templateId}
+     */
+    Optional<List<Long>> getOrdinals(long templateId);
 }

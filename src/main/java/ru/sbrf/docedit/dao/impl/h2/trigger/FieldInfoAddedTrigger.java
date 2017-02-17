@@ -24,22 +24,27 @@ public class FieldInfoAddedTrigger implements Trigger {
 
     @Override
     public void fire(Connection conn, Object[] oldRow, Object[] newRow) throws SQLException {
-        assert newRow.length >= 2;
+        assert newRow.length == 6;
 
         final long templateId = (long) newRow[0];
         final long fieldId = (long) newRow[1];
 
         final Optional<List<Long>> ordinals = getOrdinals(conn, templateId);
         List<Long> o;
+        int ordinal;
 
         if (ordinals.isPresent()) {
             o = ordinals.get();
+            ordinal = o.size();
             o.add(fieldId);
             updateOrdinals(conn, templateId, o);
         } else {
+            ordinal = 0;
             o = Collections.singletonList(fieldId);
             createOrdinals(conn, templateId, o);
         }
+
+        newRow[5] = ordinal;
 
         LOGGER.info("FieldInfo.afterInsert -- " +
                 "fieldId: " + fieldId +

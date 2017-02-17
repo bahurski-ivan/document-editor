@@ -72,31 +72,11 @@ public class FieldServiceImplTest extends AbstractDbTest {
     @Test
     public void update() throws Exception {
         final FieldMeta expected = new FieldMeta(1, 1, "field#1_NV", "field#1_NV", FieldType.TEXTAREA, 0);
-        final FieldMeta updated = fieldService.update(1, "field#1_NV", "field#1_NV", FieldType.TEXTAREA, -1000);
+        fieldService.update(1, "field#1_NV", "field#1_NV", FieldType.TEXTAREA, 0);
         final FieldMeta saved = fieldService.getOne(1).orElse(null);
         final FieldFull documentField = fieldService.getDocumentField(1, 1).orElse(null);
 
         assertEquals(expected, saved);
-        assertEquals(expected, updated);
-        assertEquals(documentField.getValue(), new TextAreaValue("hello"));
-        assertEquals(documentField.getMeta(), expected);
-
-        final TemplateFull full = templateService.getFull(1).orElse(null);
-
-        assertNotNull(full);
-        assertThat(full.getFields().size(), org.hamcrest.CoreMatchers.not(CoreMatchers.equalTo(0)));
-        assertEquals(full.getFields().get(0), expected);
-    }
-
-    @Test
-    public void updateOrdinalsTest() throws Exception {
-        final FieldMeta expected = new FieldMeta(1, 1, "field#1_NV", "field#1_NV", FieldType.TEXTAREA, 0);
-        final FieldMeta updated = fieldService.update(1, "field#1_NV", "field#1_NV", FieldType.TEXTAREA, -1000);
-        final FieldMeta saved = fieldService.getOne(1).orElse(null);
-        final FieldFull documentField = fieldService.getDocumentField(1, 1).orElse(null);
-
-        assertEquals(expected, saved);
-        assertEquals(expected, updated);
         assertEquals(documentField.getValue(), new TextAreaValue("hello"));
         assertEquals(documentField.getMeta(), expected);
 
@@ -133,6 +113,4 @@ public class FieldServiceImplTest extends AbstractDbTest {
     public void updateNonExistent() throws Exception {
         fieldService.update(10000, "a", "b", FieldType.INPUT, -10);
     }
-
-
 }

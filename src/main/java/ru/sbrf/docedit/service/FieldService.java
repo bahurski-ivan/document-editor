@@ -64,7 +64,7 @@ public interface FieldService {
      * @param type          type of field
      * @return updated field meta information
      */
-    FieldMeta update(long fieldId, String technicalName, String displayName, FieldType type, int ordinal);
+    void update(long fieldId, String technicalName, String displayName, FieldType type, int ordinal);
 
     /**
      * Removes field from template.

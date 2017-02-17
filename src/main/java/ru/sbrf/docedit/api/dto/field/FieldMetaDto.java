@@ -36,7 +36,7 @@ public class FieldMetaDto {
     private FieldType type;
 
     @NotNull
-    @JsonProperty(value = "field_ordinal", required = true)
+    @JsonProperty(value = "field_ordinal")
     private int ordinal;
 
 
@@ -75,11 +75,11 @@ public class FieldMetaDto {
         return templateId;
     }
 
-    public void setTemplateId(Long templateId) {
+    public void setTemplateId(long templateId) {
         this.templateId = templateId;
     }
 
-    public void setTemplateId(long templateId) {
+    public void setTemplateId(Long templateId) {
         this.templateId = templateId;
     }
 
@@ -114,6 +114,7 @@ public class FieldMetaDto {
     public void setOrdinal(int ordinal) {
         this.ordinal = ordinal;
     }
+
 
     @Override
     public String toString() {

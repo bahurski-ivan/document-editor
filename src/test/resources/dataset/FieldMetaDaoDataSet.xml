@@ -10,6 +10,7 @@
             technical_name="field#1"
             display_name="some field"
             type="INPUT"
+            ordinal="0"
     />
     <FIELDS_INFO
             template_id="0"
@@ -17,6 +18,7 @@
             technical_name="field#2"
             display_name="some field 2"
             type="CHECKBOX"
+            ordinal="1"
     />
     <FIELDS_INFO
             template_id="0"
@@ -24,5 +26,6 @@
             technical_name="field#3"
             display_name="some field 3"
             type="TEXTAREA"
+            ordinal="2"
     />
 </dataset>

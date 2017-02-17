@@ -15,8 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ru.sbrf.docedit.dao.impl.h2.trigger.Helper.getOrdinals;
-import static ru.sbrf.docedit.dao.impl.h2.trigger.Helper.updateOrdinals;
+import static ru.sbrf.docedit.dao.impl.h2.trigger.Helper.*;
 
 /**
  * This trigger will update field values when field type is modified.
@@ -38,7 +37,7 @@ public class FieldInfoModifiedTrigger implements Trigger {
         final FieldType oldType = FieldType.valueOf((String) oldRow[4]);
         final FieldType newType = FieldType.valueOf((String) newRow[4]);
         final int oldOrdinal = (int) oldRow[5];
-        final int newOrdinal = (int) newRow[5];
+        int ordinal = (int) newRow[5];
 
         int fieldModified = 0;
 
@@ -65,18 +64,26 @@ public class FieldInfoModifiedTrigger implements Trigger {
             fieldModified = fieldsToModify.size();
         }
 
-        if (oldOrdinal != newOrdinal) {
+        if (oldOrdinal != ordinal) {
             final List<Long> ordinals = getOrdinals(conn, templateId).orElseThrow(AssertionError::new);
-            int oldIndex = ordinals.indexOf(fieldId);
-            assert oldIndex != -1;
-            ordinals.remove((int) oldIndex);
-            ordinals.add(newOrdinal, fieldId);
-            assert updateOrdinals(conn, templateId, ordinals);
+
+            ordinal = adjustOrdinal(ordinal, ordinals.size());
+
+            if (oldOrdinal != ordinal) {
+                int oldIndex = ordinals.indexOf(fieldId);
+                assert oldIndex != -1;
+
+                ordinals.remove((int) oldIndex);
+                ordinals.add(ordinal, fieldId);
+                updateOrdinals(conn, templateId, ordinals);
+
+                newRow[5] = ordinal;
+            }
         }
 
         LOGGER.info("FieldInfo.afterTypeUpdate -- " +
                 "fieldId: " + fieldId +
-                " ; from ordinal: " + oldOrdinal + " to: " + newOrdinal +
+                " ; from ordinal: " + oldOrdinal + " to: " + ordinal +
                 " ; from type: " + oldType + " to: " + newType +
                 " ; values updated: " + fieldModified);
     }

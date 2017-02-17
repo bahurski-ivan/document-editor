@@ -54,4 +54,12 @@ class Helper {
     static List<Long> makeWritable(List<Long> list) {
         return list instanceof ArrayList ? list : new ArrayList<>(list);
     }
+
+    static int adjustOrdinal(int ordinal, int max) {
+        if (ordinal < 0)
+            return 0;
+        else if (ordinal > max)
+            return max;
+        return ordinal;
+    }
 }

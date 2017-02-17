@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.DocumentMetaDao;
 import ru.sbrf.docedit.dao.FieldMetaDao;
-import ru.sbrf.docedit.dao.FieldOrdinalsDao;
 import ru.sbrf.docedit.dao.FieldValueDao;
 import ru.sbrf.docedit.exception.NoSuchEntityException;
 import ru.sbrf.docedit.model.document.DocumentFull;
@@ -34,14 +33,12 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentMetaDao documentMetaDao;
     private final FieldValueDao fieldValueDao;
     private final FieldMetaDao fieldMetaDao;
-    private final FieldOrdinalsDao ordinalsDao;
 
     @Autowired
-    public DocumentServiceImpl(DocumentMetaDao documentMetaDao, FieldValueDao fieldValueDao, FieldMetaDao fieldMetaDao, FieldOrdinalsDao ordinalsDao) {
+    public DocumentServiceImpl(DocumentMetaDao documentMetaDao, FieldValueDao fieldValueDao, FieldMetaDao fieldMetaDao) {
         this.documentMetaDao = documentMetaDao;
         this.fieldValueDao = fieldValueDao;
         this.fieldMetaDao = fieldMetaDao;
-        this.ordinalsDao = ordinalsDao;
     }
 
     @Override
@@ -83,7 +80,7 @@ public class DocumentServiceImpl implements DocumentService {
         if (dd.isPresent()) {
             final DocumentMeta meta = dd.get();
             final long templateId = meta.getTemplateId();
-            final List<Long> orderedIds = ordinalsDao.getOrderedFields(templateId);
+            final List<Long> orderedIds = fieldMetaDao.getOrdinals(templateId).orElseThrow(NoSuchEntityException::new);
 
             final Map<Long, Integer> fieldIdIndexMap = IntStream
                     .range(0, orderedIds.size()).mapToObj(i -> i)

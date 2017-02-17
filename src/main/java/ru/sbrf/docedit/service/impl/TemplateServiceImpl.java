@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.FieldMetaDao;
-import ru.sbrf.docedit.dao.FieldOrdinalsDao;
 import ru.sbrf.docedit.dao.TemplateMetaDao;
 import ru.sbrf.docedit.exception.NoSuchEntityException;
 import ru.sbrf.docedit.model.field.FieldMeta;
@@ -29,13 +28,11 @@ import java.util.stream.IntStream;
 @Transactional(isolation = Isolation.READ_COMMITTED)
 public class TemplateServiceImpl implements TemplateService {
     private final TemplateMetaDao templateMetaDao;
-    private final FieldOrdinalsDao ordinalsDao;
     private final FieldMetaDao fieldMetaDao;
 
     @Autowired
-    public TemplateServiceImpl(TemplateMetaDao templateMetaDao, FieldOrdinalsDao ordinalsDao, FieldMetaDao fieldMetaDao) {
+    public TemplateServiceImpl(TemplateMetaDao templateMetaDao, FieldMetaDao fieldMetaDao) {
         this.templateMetaDao = templateMetaDao;
-        this.ordinalsDao = ordinalsDao;
         this.fieldMetaDao = fieldMetaDao;
     }
 
@@ -78,7 +75,7 @@ public class TemplateServiceImpl implements TemplateService {
 
         if (mm.isPresent()) {
             final TemplateMeta meta = mm.get();
-            final List<Long> orderedIds = ordinalsDao.getOrderedFields(templateId);
+            final List<Long> orderedIds = fieldMetaDao.getOrdinals(templateId).orElseThrow(NoSuchEntityException::new);
 
             final Map<Long, Integer> fieldIdIndexMap = IntStream
                     .range(0, orderedIds.size()).mapToObj(i -> i)
