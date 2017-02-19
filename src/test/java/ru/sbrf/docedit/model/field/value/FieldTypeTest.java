@@ -11,8 +11,8 @@ import static junit.framework.TestCase.assertFalse;
 public class FieldTypeTest {
     @Test
     public void isConversionPossible() throws Exception {
-//        final FieldValue v1 = new CheckboxValue(true);
-//        final FieldValue v2 = new InputValue("...");
+//        final FieldUpdate v1 = new CheckboxValue(true);
+//        final FieldUpdate v2 = new InputValue("...");
         assertFalse(FieldType.INPUT.possibleToLoadFrom(FieldType.CHECKBOX));
     }
 

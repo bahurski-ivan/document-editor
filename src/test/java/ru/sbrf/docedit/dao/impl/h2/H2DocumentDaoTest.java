@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
  */
 @DatabaseSetup("classpath:dataset/DocumentMetaDaoDataSet.xml")
 @DatabaseTearDown("classpath:dataset/DocumentMetaDaoDataSet.xml")
-public class H2DocumentMetaDaoTest extends AbstractDbTest {
+public class H2DocumentDaoTest extends AbstractDbTest {
     private static final List<DocumentMeta> ALL_DOCUMENTS = new ArrayList<>();
 
     static {
@@ -32,13 +32,13 @@ public class H2DocumentMetaDaoTest extends AbstractDbTest {
     }
 
     @Autowired
-    private H2DocumentMetaDao documentMetaDao;
+    private H2DocumentDao documentMetaDao;
 
     @Test
     public void createDocument() throws Exception {
         final DocumentMeta meta = new DocumentMeta(0, 0, "document#1");
         final long id = documentMetaDao.createDocument(meta);
-        final Optional<DocumentMeta> saved = documentMetaDao.get(id);
+        final Optional<DocumentMeta> saved = documentMetaDao.getDocumentMeta(id);
 
         assertEquals(id, 0);
         assertTrue(saved.isPresent());
@@ -49,7 +49,7 @@ public class H2DocumentMetaDaoTest extends AbstractDbTest {
     public void updateDocument() throws Exception {
         final DocumentMeta meta = new DocumentMeta(1, 1, "document#20");
         assertTrue(documentMetaDao.updateDocument(meta));
-        assertEquals(meta, documentMetaDao.get(1).orElseThrow(AssertionFailedError::new));
+        assertEquals(meta, documentMetaDao.getDocumentMeta(1).orElseThrow(AssertionFailedError::new));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class H2DocumentMetaDaoTest extends AbstractDbTest {
 
     @Test
     public void get() throws Exception {
-        final Optional<DocumentMeta> dd = documentMetaDao.get(1);
+        final Optional<DocumentMeta> dd = documentMetaDao.getDocumentMeta(1);
         assertEquals(dd.orElse(null), ALL_DOCUMENTS.get(0));
     }
 

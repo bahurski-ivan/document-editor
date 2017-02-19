@@ -1,5 +1,7 @@
 package ru.sbrf.docedit.model.template;
 
+import ru.sbrf.docedit.model.update.FieldUpdate;
+
 import java.util.Objects;
 
 /**
@@ -8,6 +10,7 @@ import java.util.Objects;
 public class TemplateMeta {
     private final long templateId;
     private final String templateName;
+
 
     public TemplateMeta(long templateId, String templateName) {
         Objects.requireNonNull(templateName);
@@ -49,5 +52,21 @@ public class TemplateMeta {
         int result = (int) (templateId ^ (templateId >>> 32));
         result = 31 * result + templateName.hashCode();
         return result;
+    }
+
+    /**
+     * Update information holder.
+     */
+    public static class Update {
+        private final FieldUpdate<String> templateName = new FieldUpdate<>();
+
+        public FieldUpdate<String> getTemplateName() {
+            return templateName;
+        }
+
+        public Update setTemplateName(String templateName) {
+            this.templateName.setValue(templateName);
+            return this;
+        }
     }
 }

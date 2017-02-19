@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
  */
 @DatabaseSetup("classpath:dataset/TemplateMetaDaoDataSet.xml")
 @DatabaseTearDown("classpath:dataset/TemplateMetaDaoDataSet.xml")
-public class H2TemplateMetaDaoTest extends AbstractDbTest {
+public class H2TemplateDaoTest extends AbstractDbTest {
     private static final List<TemplateMeta> ALL_TEMPLATES = new ArrayList<>();
 
     static {
@@ -30,7 +30,7 @@ public class H2TemplateMetaDaoTest extends AbstractDbTest {
     }
 
     @Autowired
-    private H2TemplateMetaDao templateMetaDao;
+    private H2TemplateDao templateMetaDao;
 
     @Test
     public void createTemplate() throws Exception {
@@ -43,7 +43,7 @@ public class H2TemplateMetaDaoTest extends AbstractDbTest {
     @Test
     public void updateTemplateName() throws Exception {
         final TemplateMeta meta = new TemplateMeta(1, "template#1-0000");
-        assertTrue(templateMetaDao.updateTemplateName(meta));
+        assertTrue(templateMetaDao.updateTemplate(meta));
         assertEquals(meta, templateMetaDao.getTemplate(1).orElse(null));
     }
 

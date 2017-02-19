@@ -10,7 +10,7 @@ public interface FieldValue extends Serializable {
      * Converts field value to different type.
      *
      * @param type result type
-     * @return new {@code FieldValue} instance if conversion exist{@literal ,} otherwise {@code null}
+     * @return new {@code FieldUpdate} instance if conversion exist{@literal ,} otherwise {@code null}
      */
     FieldValue convertTo(FieldType type);
 }

@@ -2,6 +2,7 @@ package ru.sbrf.docedit.dao;
 
 import ru.sbrf.docedit.model.pagination.Order;
 import ru.sbrf.docedit.model.pagination.Page;
+import ru.sbrf.docedit.model.template.TemplateFull;
 import ru.sbrf.docedit.model.template.TemplateMeta;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.Optional;
 /**
  * Interface for {@code TemplateMeta} data access object.
  */
-public interface TemplateMetaDao {
+public interface TemplateDao {
     /**
      * Creates new document template.
      *
@@ -21,13 +22,12 @@ public interface TemplateMetaDao {
 
     /**
      * Updates template by its id.
-     * <p>
-     * This method will update all fields of {@code TemplateMeta} according to {@code templateMeta} argument.
      *
-     * @param templateMeta id of template to update
+     * @param templateId id of template to update
+     * @param update     update info
      * @return {@code true} if template has been updated
      */
-    boolean updateTemplateName(TemplateMeta templateMeta);
+    boolean updateTemplate(long templateId, TemplateMeta.Update update);
 
     /**
      * Lists all saved templates meta information.
@@ -58,4 +58,14 @@ public interface TemplateMetaDao {
      * @return paged result
      */
     Page<TemplateMeta> listPaged(int pageNo, int pageSize, Order order);
+
+    /**
+     * Returns full template.
+     * <p>
+     * Note that fields (returned by {@code TemplateFull.getFields()} are ordered by ordinal.
+     *
+     * @param templateId id of the template
+     * @return {@code Optional.empty()} if there is no such template
+     */
+    Optional<TemplateFull> getFullTemplate(long templateId);
 }

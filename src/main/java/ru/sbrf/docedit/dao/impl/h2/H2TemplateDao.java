@@ -1,6 +1,5 @@
 package ru.sbrf.docedit.dao.impl.h2;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -8,12 +7,14 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.sbrf.docedit.dao.TemplateMetaDao;
+import ru.sbrf.docedit.dao.TemplateDao;
+import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.pagination.Order;
 import ru.sbrf.docedit.model.pagination.Page;
 import ru.sbrf.docedit.model.pagination.Pagination;
 import ru.sbrf.docedit.model.pagination.impl.PageImpl;
 import ru.sbrf.docedit.model.pagination.impl.PaginationImpl;
+import ru.sbrf.docedit.model.template.TemplateFull;
 import ru.sbrf.docedit.model.template.TemplateMeta;
 
 import java.sql.PreparedStatement;
@@ -21,26 +22,24 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by SBT-Bakhurskiy-IA on 09.02.2017.
  */
 @Component
-public class H2TemplateMetaDao implements TemplateMetaDao {
+public class H2TemplateDao implements TemplateDao {
     private final JdbcTemplate jdbcTemplate;
+    private final H2FieldDao fieldDao;
 
-    @Autowired
-    public H2TemplateMetaDao(JdbcTemplate jdbcTemplate) {
+    public H2TemplateDao(JdbcTemplate jdbcTemplate, H2FieldDao fieldDao) {
         this.jdbcTemplate = jdbcTemplate;
+        this.fieldDao = fieldDao;
     }
 
-    /**
-     * Creates new document template.
-     *
-     * @param templateMeta template meta information
-     * @return id of new template
-     */
     @Override
     public long createTemplate(TemplateMeta templateMeta) {
         final String sql = "INSERT INTO DOCUMENT_TEMPLATES (template_name) VALUES (?)";
@@ -57,26 +56,30 @@ public class H2TemplateMetaDao implements TemplateMetaDao {
         return keyHolder.getKey().longValue();
     }
 
-    /**
-     * Updates template by its id.
-     *
-     * @param templateMeta id of template to update
-     * @return {@code true} if template has been updated
-     */
     @Override
-    public boolean updateTemplateName(TemplateMeta templateMeta) {
+    public boolean updateTemplate(long templateId, TemplateMeta.Update update) {
+        int updateSize = 0;
+
+        if (!update.getTemplateName().needToUpdate()) {
+            Optional<TemplateMeta> meta = getTemplate(templateId);
+            if (!meta.isPresent()) return false;
+            update.getTemplateName().setValue(meta.get().getTemplateName());
+        } else ++updateSize;
+
+        if (updateSize == 0)
+            return false;
+
+        return updateTemplate(new TemplateMeta(templateId, update.getTemplateName().getValue()));
+    }
+
+    private boolean updateTemplate(TemplateMeta templateMeta) {
         final String sql = "UPDATE DOCUMENT_TEMPLATES " +
                 "SET template_name=? " +
                 "WHERE template_id=?";
-
-        int result = jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql);
+        return jdbcTemplate.update(sql, ps -> {
             ps.setString(1, templateMeta.getTemplateName());
             ps.setLong(2, templateMeta.getTemplateId());
-            return ps;
-        });
-
-        return result == 1;
+        }) == 1;
     }
 
     @Override
@@ -125,6 +128,35 @@ public class H2TemplateMetaDao implements TemplateMetaDao {
         }
 
         return new PageImpl<>(pagination, Collections.emptyList());
+    }
+
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.SERIALIZABLE)
+    public Optional<TemplateFull> getFullTemplate(long templateId) {
+        final Optional<TemplateMeta> tt = getTemplate(templateId);
+
+        if (tt.isPresent()) {
+            final TemplateMeta templateMeta = tt.get();
+            final List<FieldMeta> metaList = fieldDao.getTemplateFields(templateMeta.getTemplateId());
+            final List<Long> ordinals = fieldDao.getOrdinals(templateMeta.getTemplateId()).orElseThrow(AssertionError::new);
+
+            final Map<Long, Integer> ordinalMap = IntStream.range(0, metaList.size())
+                    .mapToObj(i -> i)
+                    .collect(Collectors.toMap(ordinals::get, i -> i));
+
+            final List<FieldMeta> sortedFields = metaList.stream()
+                    .sorted((f1, f2) -> {
+                        final Integer i1 = ordinalMap.get(f1.getFieldId());
+                        final Integer i2 = ordinalMap.get(f2.getFieldId());
+                        assert i1 != null && i2 != null;
+                        return i1.compareTo(i2);
+                    })
+                    .collect(Collectors.toList());
+
+            return Optional.of(new TemplateFull(templateMeta, sortedFields));
+        }
+
+        return Optional.empty();
     }
 
     private static class TemplateMetaRowMapper implements RowMapper<TemplateMeta> {

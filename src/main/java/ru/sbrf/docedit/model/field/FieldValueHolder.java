@@ -5,12 +5,12 @@ import ru.sbrf.docedit.model.field.value.FieldValue;
 /**
  * Represents document's field information and it's value.
  */
-public class Field {
+public class FieldValueHolder {
     private final long fieldId;
     private final long documentId;
     private final FieldValue value;
 
-    public Field(long fieldId, long documentId, FieldValue value) {
+    public FieldValueHolder(long fieldId, long documentId, FieldValue value) {
         this.fieldId = fieldId;
         this.documentId = documentId;
         this.value = value;
@@ -30,7 +30,7 @@ public class Field {
 
     @Override
     public String toString() {
-        return "Field{" +
+        return "FieldValueHolder{" +
                 "fieldId=" + fieldId +
                 ", documentId=" + documentId +
                 ", value=" + value +
@@ -42,7 +42,7 @@ public class Field {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Field field = (Field) o;
+        FieldValueHolder field = (FieldValueHolder) o;
 
         if (fieldId != field.fieldId) return false;
         if (documentId != field.documentId) return false;

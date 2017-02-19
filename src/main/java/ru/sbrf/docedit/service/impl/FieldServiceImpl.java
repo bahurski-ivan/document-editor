@@ -4,17 +4,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.sbrf.docedit.dao.FieldMetaDao;
-import ru.sbrf.docedit.dao.FieldValueDao;
+import ru.sbrf.docedit.dao.DocumentDao;
+import ru.sbrf.docedit.dao.FieldDao;
 import ru.sbrf.docedit.exception.NoSuchEntityException;
-import ru.sbrf.docedit.model.field.Field;
+import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.field.FieldFull;
 import ru.sbrf.docedit.model.field.FieldMeta;
+import ru.sbrf.docedit.model.field.FieldValueHolder;
 import ru.sbrf.docedit.model.field.value.FieldType;
 import ru.sbrf.docedit.model.field.value.FieldValue;
 import ru.sbrf.docedit.service.FieldService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,34 +26,30 @@ import java.util.stream.Collectors;
 @Component
 @Transactional
 public class FieldServiceImpl implements FieldService {
-    private final FieldMetaDao fieldMetaDao;
-    private final FieldValueDao fieldValueDao;
-
+    private final FieldDao fieldDao;
+    private final DocumentDao documentDao;
 
     @Autowired
-    public FieldServiceImpl(FieldMetaDao fieldMetaDao, FieldValueDao fieldValueDao) {
-        this.fieldMetaDao = fieldMetaDao;
-        this.fieldValueDao = fieldValueDao;
+    public FieldServiceImpl(FieldDao fieldDao, DocumentDao documentDao) {
+        this.fieldDao = fieldDao;
+        this.documentDao = documentDao;
     }
-
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public FieldFull updateFieldValue(long documentId, long fieldId, FieldValue value) {
-        final Field field = new Field(fieldId, documentId, value);
-        if (!fieldValueDao.updateFieldValue(field))
+    public void updateFieldValue(long documentId, long fieldId, FieldValue value) {
+        if (!fieldDao.setFieldValue(documentId, fieldId, value))
             throw new NoSuchEntityException();
-        return getDocumentField(documentId, fieldId).orElseThrow(NoSuchEntityException::new);
     }
 
     @Override
     @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public Optional<FieldFull> getDocumentField(long documentId, long fieldId) {
-        final Optional<Field> ff = fieldValueDao.getField(documentId, fieldId);
+        final Optional<FieldValueHolder> ff = fieldDao.getFieldValue(documentId, fieldId);
 
         if (ff.isPresent()) {
-            final Field field = ff.get();
-            Optional<FieldMeta> ffm = fieldMetaDao.get(fieldId);
+            final FieldValueHolder field = ff.get();
+            Optional<FieldMeta> ffm = fieldDao.getFieldMeta(fieldId);
             if (ffm.isPresent())
                 return Optional.of(new FieldFull(ffm.get(), field.getValue()));
         }
@@ -62,41 +60,49 @@ public class FieldServiceImpl implements FieldService {
     @Override
     @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public List<FieldFull> getAllDocumentFields(long documentId) {
-        return fieldValueDao.listDocumentFields(documentId).stream()
-                .map(f -> getDocumentField(f.getDocumentId(), f.getFieldId()).orElse(null))
-                .filter(f -> f != null)
-                .collect(Collectors.toList());
+        final Optional<DocumentMeta> dd = documentDao.getDocumentMeta(documentId);
+
+        if (dd.isPresent()) {
+            final DocumentMeta documentMeta = dd.get();
+            final Map<Long, FieldValue> setFieldsMap = fieldDao.getDocumentNonEmptyFields(documentId);
+            return fieldDao.getTemplateFields(documentMeta.getTemplateId())
+                    .stream()
+                    .map(m -> new FieldFull(m, setFieldsMap.get(m.getFieldId())))
+                    .collect(Collectors.toList());
+        }
+
+        throw new NoSuchEntityException();
     }
 
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public FieldMeta create(long templateId, String technicalName, String displayName, FieldType type) {
-        final long id = fieldMetaDao.createFieldMeta(new FieldMeta(-1L, templateId, technicalName, displayName, type, Integer.MAX_VALUE));
-        return fieldMetaDao.get(id).orElseThrow(NoSuchEntityException::new);
+        final long id = fieldDao.createFieldMeta(new FieldMeta(-1L, templateId, technicalName, displayName, type, Integer.MAX_VALUE));
+        return fieldDao.getFieldMeta(id).orElseThrow(NoSuchEntityException::new);
     }
 
     @Override
-    public void update(long fieldId, String technicalName, String displayName, FieldType type, int ordinal) {
-        if (!fieldMetaDao.updateFieldMeta(new FieldMeta(fieldId, -1, technicalName, displayName, type, ordinal)))
+    public void update(long fieldId, FieldMeta.Update update) {
+        if (!fieldDao.updateFieldMeta(fieldId, update))
             throw new NoSuchEntityException();
     }
 
     @Override
     public void remove(long fieldId) {
-        if (!fieldMetaDao.removeFieldMeta(fieldId))
+        if (!fieldDao.removeFieldMeta(fieldId))
             throw new NoSuchEntityException();
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<FieldMeta> getOne(long fieldId) {
-        return fieldMetaDao.get(fieldId);
+        return fieldDao.getFieldMeta(fieldId);
     }
 
     @Override
     @Transactional(readOnly = true, isolation = Isolation.SERIALIZABLE)
     public List<FieldMeta> getAll(long templateId) {
-        return fieldMetaDao.listFields(templateId);
+        return fieldDao.getTemplateFields(templateId);
     }
 }

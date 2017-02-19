@@ -7,8 +7,12 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.sbrf.docedit.dao.DocumentMetaDao;
+import ru.sbrf.docedit.dao.DocumentDao;
+import ru.sbrf.docedit.model.document.DocumentFull;
 import ru.sbrf.docedit.model.document.DocumentMeta;
+import ru.sbrf.docedit.model.field.FieldFull;
+import ru.sbrf.docedit.model.field.FieldMeta;
+import ru.sbrf.docedit.model.field.value.FieldValue;
 import ru.sbrf.docedit.model.pagination.Order;
 import ru.sbrf.docedit.model.pagination.Page;
 import ru.sbrf.docedit.model.pagination.Pagination;
@@ -20,17 +24,22 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by SBT-Bakhurskiy-IA on 09.02.2017.
  */
 @Component
-public class H2DocumentMetaDao implements DocumentMetaDao {
+public class H2DocumentDao implements DocumentDao {
     private final JdbcTemplate jdbcTemplate;
+    private final H2FieldDao fieldDao;
 
-    public H2DocumentMetaDao(JdbcTemplate jdbcTemplate) {
+    public H2DocumentDao(JdbcTemplate jdbcTemplate, H2FieldDao fieldDao) {
         this.jdbcTemplate = jdbcTemplate;
+        this.fieldDao = fieldDao;
     }
 
     @Override
@@ -51,18 +60,39 @@ public class H2DocumentMetaDao implements DocumentMetaDao {
     }
 
     @Override
-    public boolean updateDocument(DocumentMeta documentMeta) {
+    public boolean updateDocument(long documentId, DocumentMeta.Update update) {
+        int updateSize = 0;
+        Optional<DocumentMeta> oldValue = null;
+
+        if (!update.getTemplateId().needToUpdate()) {
+            oldValue = getDocumentMeta(documentId);
+            if (!oldValue.isPresent()) return false;
+            update.getTemplateId().setValue(oldValue.get().getTemplateId());
+        } else ++updateSize;
+
+        if (!update.getDocumentName().needToUpdate()) {
+            oldValue = getDocumentMeta(documentId);
+            if (!oldValue.isPresent()) return false;
+            update.getDocumentName().setValue(oldValue.get().getDocumentName());
+        } else ++updateSize;
+
+        if (updateSize == 0)
+            return false;
+
+        return updateDocument(documentId, new DocumentMeta(
+                documentId,
+                update.getTemplateId().getValue(),
+                update.getDocumentName().getValue()
+        ));
+    }
+
+    private boolean updateDocument(long documentId, DocumentMeta m) {
         final String sql = "UPDATE DOCUMENTS SET template_id=?, document_name=? WHERE document_id=?";
-
-        int result = jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setLong(1, documentMeta.getTemplateId());
-            ps.setString(2, documentMeta.getDocumentName());
-            ps.setLong(3, documentMeta.getDocumentId());
-            return ps;
-        });
-
-        return result == 1;
+        return jdbcTemplate.update(sql, ps -> {
+            ps.setLong(1, m.getTemplateId());
+            ps.setString(2, m.getDocumentName());
+            ps.setLong(3, documentId);
+        }) == 1;
     }
 
     @Override
@@ -83,7 +113,7 @@ public class H2DocumentMetaDao implements DocumentMetaDao {
     }
 
     @Override
-    public Optional<DocumentMeta> get(long documentId) {
+    public Optional<DocumentMeta> getDocumentMeta(long documentId) {
         final String sql = "SELECT document_id, template_id, document_name FROM DOCUMENTS WHERE document_id=?";
         final List<DocumentMeta> queryResult = jdbcTemplate.query(sql, DocumentMetaRowMapper.INSTANCE, documentId);
         return queryResult.size() == 0 ? Optional.empty() : Optional.of(queryResult.get(0));
@@ -125,6 +155,36 @@ public class H2DocumentMetaDao implements DocumentMetaDao {
         }
 
         return new PageImpl<>(pagination, Collections.emptyList());
+    }
+
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.SERIALIZABLE)
+    public Optional<DocumentFull> getFullDocument(long documentId) {
+        final Optional<DocumentMeta> dd = getDocumentMeta(documentId);
+
+        if (dd.isPresent()) {
+            final DocumentMeta documentMeta = dd.get();
+            final List<FieldMeta> metaList = fieldDao.getTemplateFields(documentMeta.getTemplateId());
+            final List<Long> ordinals = fieldDao.getOrdinals(documentMeta.getTemplateId()).orElseThrow(AssertionError::new);
+            final Map<Long, FieldValue> setValues = fieldDao.getDocumentNonEmptyFields(documentMeta.getDocumentId());
+            final Map<Long, Integer> ordinalMap = IntStream.range(0, metaList.size())
+                    .mapToObj(i -> i)
+                    .collect(Collectors.toMap(ordinals::get, i -> i));
+
+            final List<FieldFull> sortedFields = metaList.stream()
+                    .sorted((f1, f2) -> {
+                        final Integer i1 = ordinalMap.get(f1.getFieldId());
+                        final Integer i2 = ordinalMap.get(f2.getFieldId());
+                        assert i1 != null && i2 != null;
+                        return i1.compareTo(i2);
+                    })
+                    .map(fieldMeta -> new FieldFull(fieldMeta, setValues.get(fieldMeta.getFieldId())))
+                    .collect(Collectors.toList());
+
+            return Optional.of(new DocumentFull(documentMeta, sortedFields));
+        }
+
+        return Optional.empty();
     }
 
     private static class DocumentMetaRowMapper implements RowMapper<DocumentMeta> {

@@ -21,9 +21,8 @@ public interface FieldService {
      * @param documentId id of document where this field is located
      * @param fieldId    id of field
      * @param value      new value
-     * @return updated field
      */
-    FieldFull updateFieldValue(long documentId, long fieldId, FieldValue value);
+    void updateFieldValue(long documentId, long fieldId, FieldValue value);
 
     /**
      * Returns document field.
@@ -41,7 +40,7 @@ public interface FieldService {
     /**
      * Creates new field for template with {@code templateId}.
      * <p>
-     * Field is appended to the end of template, so ordinal of this
+     * FieldValueHolder is appended to the end of template, so ordinal of this
      * field is equal to previous last field in this template.
      *
      * @param templateId    id of template to append this field
@@ -58,13 +57,10 @@ public interface FieldService {
      * Note if {@code ordinal < 0} then this method will treat {@code ordinal} as 0
      * if {@code ordinal > fieldsCount} it will be equal to {@code fieldsCount + 1}.
      *
-     * @param fieldId       id of field to update
-     * @param technicalName technical name of the field
-     * @param displayName   field name that will be displayed to the user
-     * @param type          type of field
-     * @return updated field meta information
+     * @param fieldId id of field to update
+     * @param update  update info
      */
-    void update(long fieldId, String technicalName, String displayName, FieldType type, int ordinal);
+    void update(long fieldId, FieldMeta.Update update);
 
     /**
      * Removes field from template.

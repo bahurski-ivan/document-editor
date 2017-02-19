@@ -24,7 +24,7 @@ public interface DocumentService {
     /**
      * Updates document meta information.
      */
-    DocumentMeta update(long documentId, String documentName);
+    void update(long documentId, DocumentMeta.Update update);
 
     /**
      * Returns document meta information by it's it.

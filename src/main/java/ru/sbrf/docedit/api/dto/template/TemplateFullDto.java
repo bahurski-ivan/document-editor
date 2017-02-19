@@ -28,14 +28,14 @@ public class TemplateFullDto {
 
     public static TemplateFull fromDto(TemplateFullDto dto) {
         return new TemplateFull(
-                dto.getMeta().getTemplateId(), dto.getMeta().getTemplateName(),
+                TemplateMetaDto.fromDto(dto.getMeta()),
                 dto.getFieldList().stream().map(FieldMetaDto::fromDto).collect(Collectors.toList())
         );
     }
 
     public static TemplateFullDto toDto(TemplateFull templateFull) {
         return new TemplateFullDto(
-                new TemplateMetaDto(templateFull.getTemplateId(), templateFull.getTemplateName()),
+                TemplateMetaDto.toDto(templateFull.getTemplateMeta()),
                 templateFull.getFields().stream()
                         .map(FieldMetaDto::toDto)
                         .collect(Collectors.toList())

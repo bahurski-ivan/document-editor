@@ -25,7 +25,7 @@ public class DocumentFullDto {
 
     public static DocumentFullDto toDto(DocumentFull documentFull) {
         return new DocumentFullDto(
-                new DocumentMetaDto(documentFull.getDocumentId(), documentFull.getTemplateId(), documentFull.getDocumentName()),
+                DocumentMetaDto.toDto(documentFull.getDocumentMeta()),
                 documentFull.getFields().stream()
                         .map(DocumentFieldFullDto::toDto)
                         .collect(Collectors.toList())

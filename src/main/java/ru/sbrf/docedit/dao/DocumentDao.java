@@ -1,5 +1,6 @@
 package ru.sbrf.docedit.dao;
 
+import ru.sbrf.docedit.model.document.DocumentFull;
 import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.pagination.Order;
 import ru.sbrf.docedit.model.pagination.Page;
@@ -10,7 +11,7 @@ import java.util.Optional;
 /**
  * Interface for DAO of {@code DocumentMeta} class.
  */
-public interface DocumentMetaDao {
+public interface DocumentDao {
     /**
      * Creates new document.
      *
@@ -20,12 +21,13 @@ public interface DocumentMetaDao {
     long createDocument(DocumentMeta documentMeta);
 
     /**
-     * Updates document.
+     * Updates document by its id.
      *
-     * @param newValue value with which to update document
+     * @param documentId id of document to update
+     * @param update     update info
      * @return {@code true} if document was successfully updated
      */
-    boolean updateDocument(DocumentMeta newValue);
+    boolean updateDocument(long documentId, DocumentMeta.Update update);
 
     /**
      * Lists all saved documents.
@@ -42,7 +44,7 @@ public interface DocumentMetaDao {
     /**
      * Returns document by it's id.
      */
-    Optional<DocumentMeta> get(long documentId);
+    Optional<DocumentMeta> getDocumentMeta(long documentId);
 
     /**
      * Lists saved documents like {@code listAllDocuments} method but with pagination.
@@ -64,4 +66,15 @@ public interface DocumentMetaDao {
      * @param order      order result order
      */
     Page<DocumentMeta> listForTemplate(long templateId, int pageNo, int pageSize, Order order);
+
+
+    /**
+     * Returns full document.
+     * <p>
+     * Note that fields (returned by {@code DocumentFull.getFields()} are ordered by ordinal.
+     *
+     * @param documentId id of the document
+     * @return {@code Optional.empty()} if there is no such document
+     */
+    Optional<DocumentFull> getFullDocument(long documentId);
 }

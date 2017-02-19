@@ -7,40 +7,37 @@ import java.util.Objects;
 
 /**
  * Represents document meta information (document template).
+ * <p>
+ * Note that {this.getFields()} method return fields in order of there ordinals.
  */
 public class TemplateFull {
-    private final long templateId;
-    private final String templateName;
+    private final TemplateMeta templateMeta;
     private final List<FieldMeta> fields;
 
-    public TemplateFull(long templateId, String templateName, List<FieldMeta> fields) {
-        Objects.requireNonNull(templateName);
+
+    public TemplateFull(TemplateMeta templateMeta, List<FieldMeta> fields) {
+        Objects.requireNonNull(templateMeta);
         Objects.requireNonNull(fields);
 
-        this.templateId = templateId;
-        this.templateName = templateName;
+        this.templateMeta = templateMeta;
         this.fields = fields;
     }
 
-    public long getTemplateId() {
-        return templateId;
-    }
-
-    public String getTemplateName() {
-        return templateName;
-    }
-
-    public List<FieldMeta> getFields() {
-        return fields;
-    }
 
     @Override
     public String toString() {
         return "TemplateFull{" +
-                "templateId=" + templateId +
-                ", templateName='" + templateName + '\'' +
+                "templateMeta=" + templateMeta +
                 ", fields=" + fields +
                 '}';
+    }
+
+    public TemplateMeta getTemplateMeta() {
+        return templateMeta;
+    }
+
+    public List<FieldMeta> getFields() {
+        return fields;
     }
 
     @Override
@@ -50,16 +47,13 @@ public class TemplateFull {
 
         TemplateFull that = (TemplateFull) o;
 
-        if (templateId != that.templateId) return false;
-        if (!templateName.equals(that.templateName)) return false;
+        if (!templateMeta.equals(that.templateMeta)) return false;
         return fields.equals(that.fields);
-
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (templateId ^ (templateId >>> 32));
-        result = 31 * result + templateName.hashCode();
+        int result = templateMeta.hashCode();
         result = 31 * result + fields.hashCode();
         return result;
     }

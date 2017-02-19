@@ -19,7 +19,7 @@ public interface TemplateService {
     /**
      * Updates template.
      */
-    TemplateMeta update(long templateId, String templateName);
+    void update(long templateId, TemplateMeta.Update update);
 
     /**
      * Removes template.
