@@ -159,5 +159,45 @@ public class FieldMeta {
             this.ordinal.setValue(ordinal);
             return this;
         }
+
+        @Override
+        public String toString() {
+            int i = 0;
+
+            final StringBuilder sb = new StringBuilder();
+
+            sb.append("Update{");
+
+            if (templateId.needToUpdate()) {
+                ++i;
+                sb.append("templateId=").append(templateId);
+            }
+
+            if (technicalName.needToUpdate()) {
+                if (i++ != 0)
+                    sb.append(", ");
+                sb.append("technicalName='").append(technicalName).append('\'');
+            }
+
+            if (displayName.needToUpdate()) {
+                if (i++ != 0)
+                    sb.append(", ");
+                sb.append("displayName='").append(displayName).append('\'');
+            }
+
+            if (type.needToUpdate()) {
+                if (i++ != 0)
+                    sb.append(", ");
+                sb.append("type=").append(type);
+            }
+
+            if (ordinal.needToUpdate()) {
+                if (i++ != 0)
+                    sb.append(", ");
+                sb.append("ordinal=").append(ordinal);
+            }
+
+            return sb.append((i == 0 ? "<empty>" : "")).append('}').toString();
+        }
     }
 }

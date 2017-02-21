@@ -32,12 +32,11 @@ public class FieldUpdate<T> {
         return defaultValue;
     }
 
-
     @Override
     public String toString() {
-        return "FieldUpdate{" +
-                "needToUpdate=" + isSet +
-                ", value=" + value +
-                '}';
+        if (needToUpdate())
+            return value.toString();
+        else
+            return "";
     }
 }

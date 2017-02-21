@@ -2,7 +2,6 @@ package ru.sbrf.docedit.service;
 
 import ru.sbrf.docedit.model.field.FieldFull;
 import ru.sbrf.docedit.model.field.FieldMeta;
-import ru.sbrf.docedit.model.field.value.FieldType;
 import ru.sbrf.docedit.model.field.value.FieldValue;
 
 import java.util.List;
@@ -43,13 +42,10 @@ public interface FieldService {
      * FieldValueHolder is appended to the end of template, so ordinal of this
      * field is equal to previous last field in this template.
      *
-     * @param templateId    id of template to append this field
-     * @param technicalName technical name of the field
-     * @param displayName   field name that will be displayed to the user
-     * @param type          type of field
+     * @param meta new value (id field is irrelevant)
      * @return newly created field
      */
-    FieldMeta create(long templateId, String technicalName, String displayName, FieldType type);
+    FieldMeta create(FieldMeta meta);
 
     /**
      * Updates field meta information with id equals to {@code fieldId}.

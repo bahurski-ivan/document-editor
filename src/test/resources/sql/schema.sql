@@ -86,3 +86,9 @@ AFTER UPDATE
   ON FIELDS_INFO
 FOR EACH ROW
 CALL "ru.sbrf.docedit.dao.impl.h2.trigger.FieldInfoModifiedTrigger";
+
+CREATE TRIGGER DOCUMENT_MODIFIED_TRIGGER
+AFTER UPDATE
+  ON DOCUMENTS
+FOR EACH ROW
+CALL "ru.sbrf.docedit.dao.impl.h2.trigger.DocumentModifiedTrigger"

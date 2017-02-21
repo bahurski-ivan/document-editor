@@ -1,20 +1,27 @@
 package ru.sbrf.docedit.exception;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Created by SBT-Bakhurskiy-IA on 15.02.2017.
  */
 public class NoSuchEntityException extends RuntimeException {
-    private final long entityId;
+    private final List<NoSuchEntityInfo> missingEntities;
 
-    public NoSuchEntityException(long entityId) {
-        this.entityId = entityId;
+    public NoSuchEntityException(List<NoSuchEntityInfo> missingEntities) {
+        this.missingEntities = new ArrayList<>(missingEntities);
     }
 
-    public NoSuchEntityException() {
-        entityId = -1;
+    public static NoSuchEntityException ofSingle(NoSuchEntityInfo info) {
+        return new NoSuchEntityException(Collections.singletonList(info));
     }
 
-    public long getEntityId() {
-        return entityId;
+    @Override
+    public String toString() {
+        return "NoSuchEntityException{" +
+                "missingEntities=" + missingEntities +
+                '}';
     }
 }

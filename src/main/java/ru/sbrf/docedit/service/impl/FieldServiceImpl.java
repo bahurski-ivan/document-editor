@@ -6,12 +6,14 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.DocumentDao;
 import ru.sbrf.docedit.dao.FieldDao;
+import ru.sbrf.docedit.exception.DBOperation;
+import ru.sbrf.docedit.exception.EntityType;
 import ru.sbrf.docedit.exception.NoSuchEntityException;
+import ru.sbrf.docedit.exception.NoSuchEntityInfo;
 import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.field.FieldFull;
 import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.field.FieldValueHolder;
-import ru.sbrf.docedit.model.field.value.FieldType;
 import ru.sbrf.docedit.model.field.value.FieldValue;
 import ru.sbrf.docedit.service.FieldService;
 
@@ -24,7 +26,6 @@ import java.util.stream.Collectors;
  * Created by SBT-Bakhurskiy-IA on 13.02.2017.
  */
 @Component
-@Transactional
 public class FieldServiceImpl implements FieldService {
     private final FieldDao fieldDao;
     private final DocumentDao documentDao;
@@ -38,8 +39,7 @@ public class FieldServiceImpl implements FieldService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void updateFieldValue(long documentId, long fieldId, FieldValue value) {
-        if (!fieldDao.setFieldValue(documentId, fieldId, value))
-            throw new NoSuchEntityException();
+        fieldDao.setFieldValue(documentId, fieldId, value);
     }
 
     @Override
@@ -71,27 +71,27 @@ public class FieldServiceImpl implements FieldService {
                     .collect(Collectors.toList());
         }
 
-        throw new NoSuchEntityException();
-    }
-
-
-    @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public FieldMeta create(long templateId, String technicalName, String displayName, FieldType type) {
-        final long id = fieldDao.createFieldMeta(new FieldMeta(-1L, templateId, technicalName, displayName, type, Integer.MAX_VALUE));
-        return fieldDao.getFieldMeta(id).orElseThrow(NoSuchEntityException::new);
+        throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(documentId, EntityType.DOCUMENT, DBOperation.GET));
     }
 
     @Override
+    public FieldMeta create(FieldMeta meta) {
+        final long id = fieldDao.createFieldMeta(meta);
+        return fieldDao.getFieldMeta(id).orElseThrow(() -> NoSuchEntityException.ofSingle(new NoSuchEntityInfo(meta.getFieldId(), EntityType.FIELD, DBOperation.CREATE)));
+    }
+
+    @Override
+    @Transactional
     public void update(long fieldId, FieldMeta.Update update) {
         if (!fieldDao.updateFieldMeta(fieldId, update))
-            throw new NoSuchEntityException();
+            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(fieldId, EntityType.FIELD, DBOperation.UPDATE));
     }
 
     @Override
+    @Transactional
     public void remove(long fieldId) {
         if (!fieldDao.removeFieldMeta(fieldId))
-            throw new NoSuchEntityException();
+            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(fieldId, EntityType.FIELD, DBOperation.REMOVE));
     }
 
     @Override
@@ -101,7 +101,7 @@ public class FieldServiceImpl implements FieldService {
     }
 
     @Override
-    @Transactional(readOnly = true, isolation = Isolation.SERIALIZABLE)
+    @Transactional(readOnly = true)
     public List<FieldMeta> getAll(long templateId) {
         return fieldDao.getTemplateFields(templateId);
     }

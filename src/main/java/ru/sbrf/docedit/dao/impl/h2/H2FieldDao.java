@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.FieldDao;
+import ru.sbrf.docedit.exception.*;
 import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.field.FieldValueHolder;
 import ru.sbrf.docedit.model.field.value.FieldType;
@@ -42,7 +43,7 @@ public class H2FieldDao implements FieldDao {
 
     @Override
     public long createFieldMeta(FieldMeta fieldMeta) {
-        final String sql = "INSERT INTO FIELDS_INFO (template_id, technical_name, display_name, type) VALUES (?, ?, ?, ?)";
+        final String sql = "INSERT INTO FIELDS_INFO (template_id, technical_name, display_name, type, ordinal) VALUES (?, ?, ?, ?, ?)";
         final KeyHolder keyHolder = new GeneratedKeyHolder();
 
         int result = jdbcTemplate.update(connection -> {
@@ -51,6 +52,7 @@ public class H2FieldDao implements FieldDao {
             ps.setString(2, fieldMeta.getTechnicalName());
             ps.setString(3, fieldMeta.getDisplayName());
             ps.setString(4, fieldMeta.getType().toString());
+            ps.setInt(5, fieldMeta.getOrdinal());
             return ps;
         }, keyHolder);
 
@@ -82,58 +84,72 @@ public class H2FieldDao implements FieldDao {
         int updateSize = 0;
         Optional<FieldMeta> oldValue = null;
 
-        if (update.getTemplateId().needToUpdate()) ++updateSize;
-        else {
+        long templateId;
+        String technicalName, displayName;
+        FieldType type;
+        int ordinal;
+
+        if (update.getTemplateId().needToUpdate()) {
+            templateId = update.getTemplateId().getValue();
+            ++updateSize;
+        } else {
             oldValue = getFieldMeta(fieldId);
             if (!oldValue.isPresent()) return false;
-            update.getTemplateId().setValue(oldValue.get().getTemplateId());
+            templateId = oldValue.get().getTemplateId();
         }
 
-        if (update.getTechnicalName().needToUpdate()) ++updateSize;
-        else {
+        if (update.getTechnicalName().needToUpdate()) {
+            technicalName = update.getTechnicalName().getValue();
+            ++updateSize;
+        } else {
             if (oldValue == null) oldValue = getFieldMeta(fieldId);
             if (!oldValue.isPresent()) return false;
-            update.getTechnicalName().setValue(oldValue.get().getTechnicalName());
+            technicalName = oldValue.get().getTechnicalName();
         }
 
-        if (update.getDisplayName().needToUpdate()) ++updateSize;
-        else {
+        if (update.getDisplayName().needToUpdate()) {
+            displayName = update.getDisplayName().getValue();
+            ++updateSize;
+        } else {
             if (oldValue == null) oldValue = getFieldMeta(fieldId);
             if (!oldValue.isPresent()) return false;
-            update.getDisplayName().setValue(oldValue.get().getDisplayName());
+            displayName = oldValue.get().getDisplayName();
         }
 
-        if (update.getType().needToUpdate()) ++updateSize;
-        else {
+        if (update.getType().needToUpdate()) {
+            type = update.getType().getValue();
+            ++updateSize;
+        } else {
             if (oldValue == null) oldValue = getFieldMeta(fieldId);
             if (!oldValue.isPresent()) return false;
-            update.getType().setValue(oldValue.get().getType());
+            type = oldValue.get().getType();
         }
 
-        if (update.getOrdinal().needToUpdate()) ++updateSize;
-        else {
+        if (update.getOrdinal().needToUpdate()) {
+            ordinal = update.getOrdinal().getValue();
+            ++updateSize;
+        } else {
             if (oldValue == null) oldValue = getFieldMeta(fieldId);
             if (!oldValue.isPresent()) return false;
-            update.getOrdinal().setValue(oldValue.get().getOrdinal());
+            ordinal = oldValue.get().getOrdinal();
         }
 
         if (updateSize == 0)
-            return false;
+            throw new EmptyUpdate();
 
         return updateFieldMeta(fieldId, new FieldMeta(
                 fieldId,
-                update.getTemplateId().getValue(),
-                update.getTechnicalName().getValue(),
-                update.getDisplayName().getValue(),
-                update.getType().getValue(),
-                update.getOrdinal().getValue()
+                templateId,
+                technicalName,
+                displayName,
+                type,
+                ordinal
         ));
     }
 
     private boolean updateFieldMeta(long fieldId, FieldMeta m) {
-        final String sql = "UPDATE FIELDS_INFO " +
-                "SET template_id=?, technical_name=?, display_name=?, type=?, ordinal=? " +
-                "WHERE field_id=?";
+        final String sql = "UPDATE FIELDS_INFO SET template_id=?, technical_name=?, " +
+                "display_name=?, type=?, ordinal=? WHERE field_id=?";
         return jdbcTemplate.update(sql, ps -> {
             ps.setLong(1, m.getTemplateId());
             ps.setString(2, m.getTechnicalName());
@@ -145,6 +161,7 @@ public class H2FieldDao implements FieldDao {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<FieldMeta> getFieldMeta(long fieldId) {
         final String sql = "SELECT field_id, template_id, technical_name, display_name, type, ordinal FROM FIELDS_INFO WHERE field_id=?";
         final List<FieldMeta> queryResult = jdbcTemplate.query(sql, FieldMetaRowMapper.INSTANCE, fieldId);
@@ -175,12 +192,23 @@ public class H2FieldDao implements FieldDao {
     }
 
     @Override
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public boolean setFieldValue(long documentId, long fieldId, FieldValue newValue) {
-        String sql = "SELECT value FROM FIELD_VALUES WHERE field_id=? AND document_id=?";
-        int rowsAffected;
+        boolean documentExist = jdbcTemplate.query("SELECT COUNT(*) FROM DOCUMENTS WHERE document_id=?",
+                (rs, rn) -> rs.getInt(1), documentId).get(0) == 1;
+        boolean fieldExist = jdbcTemplate.query("SELECT COUNT(*) FROM FIELDS_INFO WHERE field_id=?",
+                (rs, rn) -> rs.getInt(1), fieldId).get(0) == 1;
 
-        if (jdbcTemplate.query(sql, (rs, rn) -> null).size() == 1) {
+        if (!documentExist)
+            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(documentId, EntityType.DOCUMENT, DBOperation.UPDATE));
+
+        if (!fieldExist)
+            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(fieldId, EntityType.FIELD, DBOperation.UPDATE));
+
+        int rowsAffected;
+        String sql = "SELECT value FROM FIELD_VALUES WHERE field_id=? AND document_id=?";
+
+        if (jdbcTemplate.query(sql, (rs, rn) -> null, fieldId, documentId).size() == 0) {
             sql = "INSERT INTO FIELD_VALUES(document_id, field_id, value) VALUES (?,?,?)";
             rowsAffected = jdbcTemplate.update(sql, documentId, fieldId, SerializationHelper.writeObject(newValue));
         } else {

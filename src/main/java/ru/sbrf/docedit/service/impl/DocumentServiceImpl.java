@@ -5,7 +5,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.DocumentDao;
+import ru.sbrf.docedit.exception.DBOperation;
+import ru.sbrf.docedit.exception.EntityType;
 import ru.sbrf.docedit.exception.NoSuchEntityException;
+import ru.sbrf.docedit.exception.NoSuchEntityInfo;
 import ru.sbrf.docedit.model.document.DocumentFull;
 import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.pagination.Order;
@@ -13,6 +16,7 @@ import ru.sbrf.docedit.model.pagination.Page;
 import ru.sbrf.docedit.service.DocumentService;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Created by SBT-Bakhurskiy-IA on 13.02.2017.
@@ -35,13 +39,16 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public void remove(long documentId) {
-        documentDao.removeDocument(documentId);
+        if (!documentDao.removeDocument(documentId))
+            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(documentId, EntityType.DOCUMENT, DBOperation.REMOVE));
     }
 
     @Override
     public void update(long documentId, DocumentMeta.Update update) {
-        final DocumentMeta meta = documentDao.getDocumentMeta(documentId).orElseThrow(NoSuchEntityException::new);
-        documentDao.updateDocument(documentId, update);
+        final Supplier<NoSuchEntityException> exceptionSupplier = () -> NoSuchEntityException.ofSingle(new NoSuchEntityInfo(documentId, EntityType.DOCUMENT, DBOperation.UPDATE));
+        final DocumentMeta meta = documentDao.getDocumentMeta(documentId).orElseThrow(exceptionSupplier);
+        if (!documentDao.updateDocument(documentId, update))
+            throw exceptionSupplier.get();
     }
 
     @Override

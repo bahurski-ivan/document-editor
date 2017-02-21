@@ -65,8 +65,9 @@ public class FieldInfoModifiedTrigger implements Trigger {
                 for (FieldValueHolder field : fieldsToModify)
                     try (final PreparedStatement update = conn.prepareStatement(sql)) {
                         update.setBlob(1, SerializationHelper.writeObject(field.getValue().convertTo(newType)));
+                        update.setLong(2, field.getFieldId());
+                        documentValuesConverted = update.executeUpdate();
                     }
-                documentValuesConverted = fieldsToModify.size();
             }
         }
         // if template for field was changed --> delete all field values with given fieldId
@@ -86,17 +87,21 @@ public class FieldInfoModifiedTrigger implements Trigger {
             updateOrdinals(conn, oldTemplateId, ordinals);
         }
 
-        //  if ordinal was changed or field was assigned to other template to other template -->
+        // if ordinal was changed or field was assigned to other template -->
         // recalculate and rewrite ordinals for template
         if (oldOrdinal != ordinal || templateId != oldTemplateId) {
-            final List<Long> ordinals = getOrdinals(conn, templateId).orElseThrow(AssertionError::new);
+            final List<Long> ordinals = getOrdinals(conn, templateId).orElse(new ArrayList<>());
 
             ordinal = adjustOrdinal(ordinal, ordinals.size());
 
             if (oldOrdinal != ordinal || templateId != oldTemplateId) {
                 int oldIndex = ordinals.indexOf(fieldId);
-                if (oldIndex != -1)
+
+                if (oldIndex != -1) {
                     ordinals.remove((int) oldIndex);
+                    ordinal = adjustOrdinal(ordinal, ordinals.size());
+                }
+
                 ordinals.add(ordinal, fieldId);
                 updateOrdinals(conn, templateId, ordinals);
                 newRow[5] = ordinal;

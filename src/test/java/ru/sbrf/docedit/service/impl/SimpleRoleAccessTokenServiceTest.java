@@ -12,6 +12,8 @@ import ru.sbrf.docedit.service.UserService;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
+import static ru.sbrf.docedit.service.impl.DataSet.ADMIN_USER;
+import static ru.sbrf.docedit.service.impl.DataSet.REGULAR_USER;
 
 @DatabaseSetup("classpath:dataset/ServicesDataSet.xml")
 @DatabaseTearDown("classpath:dataset/ServicesDataSet.xml")
@@ -27,17 +29,15 @@ public class SimpleRoleAccessTokenServiceTest extends AbstractDbTest {
 
     @Test
     public void accessCheck() throws Exception {
-        Optional<String> t = userService.getAccessToken("user#2", "user#2");
-        assertTrue(t.isPresent());
-        assertEquals(t.get(), Role.REGULAR.toString());
-        assertFalse(userService.isAllowed(t.get(), Action.DELETE_TEMPLATE));
+        String token = userService.getAccessToken(REGULAR_USER.getLogin(), REGULAR_USER.getPasswordMd5()).orElse(null);
+        assertEquals(token, Role.REGULAR.toString());
+        assertFalse(userService.isAllowed(token, Action.DELETE_TEMPLATE));
     }
 
     @Test
     public void checkExistent() throws Exception {
-        Optional<String> t = userService.getAccessToken("user#1", "user#1");
-        assertTrue(t.isPresent());
-        assertEquals(t.get(), Role.ADMINISTRATOR.toString());
-        assertTrue(userService.isAllowed(t.get(), Action.DELETE_TEMPLATE));
+        String token = userService.getAccessToken(ADMIN_USER.getLogin(), ADMIN_USER.getPasswordMd5()).orElse(null);
+        assertEquals(token, Role.ADMINISTRATOR.toString());
+        assertTrue(userService.isAllowed(token, Action.DELETE_TEMPLATE));
     }
 }

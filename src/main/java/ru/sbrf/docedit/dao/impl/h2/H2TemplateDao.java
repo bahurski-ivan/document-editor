@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.TemplateDao;
+import ru.sbrf.docedit.exception.EmptyUpdate;
 import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.pagination.Order;
 import ru.sbrf.docedit.model.pagination.Page;
@@ -67,7 +68,7 @@ public class H2TemplateDao implements TemplateDao {
         } else ++updateSize;
 
         if (updateSize == 0)
-            return false;
+            throw new EmptyUpdate();
 
         return updateTemplate(new TemplateMeta(templateId, update.getTemplateName().getValue()));
     }

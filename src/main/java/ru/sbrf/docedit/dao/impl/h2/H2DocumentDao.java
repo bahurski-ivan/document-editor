@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.DocumentDao;
+import ru.sbrf.docedit.exception.EmptyUpdate;
 import ru.sbrf.docedit.model.document.DocumentFull;
 import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.field.FieldFull;
@@ -22,10 +23,7 @@ import ru.sbrf.docedit.model.pagination.impl.PaginationImpl;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -77,7 +75,7 @@ public class H2DocumentDao implements DocumentDao {
         } else ++updateSize;
 
         if (updateSize == 0)
-            return false;
+            throw new EmptyUpdate();
 
         return updateDocument(documentId, new DocumentMeta(
                 documentId,
@@ -165,21 +163,26 @@ public class H2DocumentDao implements DocumentDao {
         if (dd.isPresent()) {
             final DocumentMeta documentMeta = dd.get();
             final List<FieldMeta> metaList = fieldDao.getTemplateFields(documentMeta.getTemplateId());
-            final List<Long> ordinals = fieldDao.getOrdinals(documentMeta.getTemplateId()).orElseThrow(AssertionError::new);
-            final Map<Long, FieldValue> setValues = fieldDao.getDocumentNonEmptyFields(documentMeta.getDocumentId());
-            final Map<Long, Integer> ordinalMap = IntStream.range(0, metaList.size())
-                    .mapToObj(i -> i)
-                    .collect(Collectors.toMap(ordinals::get, i -> i));
+            List<FieldFull> sortedFields;
 
-            final List<FieldFull> sortedFields = metaList.stream()
-                    .sorted((f1, f2) -> {
-                        final Integer i1 = ordinalMap.get(f1.getFieldId());
-                        final Integer i2 = ordinalMap.get(f2.getFieldId());
-                        assert i1 != null && i2 != null;
-                        return i1.compareTo(i2);
-                    })
-                    .map(fieldMeta -> new FieldFull(fieldMeta, setValues.get(fieldMeta.getFieldId())))
-                    .collect(Collectors.toList());
+            if (!metaList.isEmpty()) {
+                final List<Long> ordinals = fieldDao.getOrdinals(documentMeta.getTemplateId()).orElseThrow(AssertionError::new);
+                final Map<Long, FieldValue> setValues = fieldDao.getDocumentNonEmptyFields(documentMeta.getDocumentId());
+                final Map<Long, Integer> ordinalMap = IntStream.range(0, metaList.size())
+                        .mapToObj(i -> i)
+                        .collect(Collectors.toMap(ordinals::get, i -> i));
+
+                sortedFields = metaList.stream()
+                        .sorted((f1, f2) -> {
+                            final Integer i1 = ordinalMap.get(f1.getFieldId());
+                            final Integer i2 = ordinalMap.get(f2.getFieldId());
+                            assert i1 != null && i2 != null;
+                            return i1.compareTo(i2);
+                        })
+                        .map(fieldMeta -> new FieldFull(fieldMeta, setValues.get(fieldMeta.getFieldId())))
+                        .collect(Collectors.toList());
+            } else
+                sortedFields = new ArrayList<>();
 
             return Optional.of(new DocumentFull(documentMeta, sortedFields));
         }

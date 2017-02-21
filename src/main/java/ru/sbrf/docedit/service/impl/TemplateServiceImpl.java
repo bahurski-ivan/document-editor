@@ -5,7 +5,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.TemplateDao;
+import ru.sbrf.docedit.exception.DBOperation;
+import ru.sbrf.docedit.exception.EntityType;
 import ru.sbrf.docedit.exception.NoSuchEntityException;
+import ru.sbrf.docedit.exception.NoSuchEntityInfo;
 import ru.sbrf.docedit.model.pagination.Order;
 import ru.sbrf.docedit.model.pagination.Page;
 import ru.sbrf.docedit.model.template.TemplateFull;
@@ -37,13 +40,13 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public void update(long templateId, TemplateMeta.Update update) {
         if (!templateDao.updateTemplate(templateId, update))
-            throw new NoSuchEntityException();
+            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(templateId, EntityType.TEMPLATE, DBOperation.UPDATE));
     }
 
     @Override
     public void remove(long templateId) {
         if (!templateDao.removeTemplateMeta(templateId))
-            throw new NoSuchEntityException();
+            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(templateId, EntityType.TEMPLATE, DBOperation.REMOVE));
     }
 
     @Override
@@ -59,6 +62,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<TemplateFull> getFull(long templateId) {
         return templateDao.getFullTemplate(templateId);
     }

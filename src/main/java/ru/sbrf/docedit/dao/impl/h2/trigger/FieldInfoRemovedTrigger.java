@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -47,7 +48,10 @@ public class FieldInfoRemovedTrigger implements Trigger {
                 }
             }
 
-            assert queryResult.size() == 1;
+            if (queryResult.isEmpty())
+                queryResult.add(Collections.emptyList());
+
+//            assert queryResult.size() == 1;
 
             final List<Long> ordinals =
                     queryResult.get(0) instanceof ArrayList ?

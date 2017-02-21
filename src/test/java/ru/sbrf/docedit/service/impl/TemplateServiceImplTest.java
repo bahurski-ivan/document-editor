@@ -5,6 +5,8 @@ import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.sbrf.docedit.AbstractDbTest;
+import ru.sbrf.docedit.exception.EmptyUpdate;
+import ru.sbrf.docedit.exception.NoSuchEntityException;
 import ru.sbrf.docedit.model.pagination.Order;
 import ru.sbrf.docedit.model.template.TemplateFull;
 import ru.sbrf.docedit.model.template.TemplateMeta;
@@ -46,7 +48,23 @@ public class TemplateServiceImplTest extends AbstractDbTest {
         assertEquals(expected, saved);
     }
 
-    // TODO write tests to test that all exceptions thrown as expected
+    @Test(expected = EmptyUpdate.class)
+    public void updateEmpty() throws Exception {
+        final TemplateMeta old = ALL_TEMPLATES.get(0);
+        templateService.update(old.getTemplateId(), new TemplateMeta.Update());
+        final TemplateMeta persisted = templateService.get(old.getTemplateId()).orElse(null);
+        assertEquals(old, persisted);
+    }
+
+    @Test(expected = NoSuchEntityException.class)
+    public void updateNonExistent() throws Exception {
+        templateService.update(1000000, new TemplateMeta.Update().setTemplateName("template"));
+    }
+
+    @Test(expected = NoSuchEntityException.class)
+    public void removeNonExistent() throws Exception {
+        templateService.remove(10000000);
+    }
 
     @Test
     public void remove() throws Exception {
