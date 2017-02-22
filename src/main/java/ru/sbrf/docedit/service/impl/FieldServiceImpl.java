@@ -90,7 +90,7 @@ public class FieldServiceImpl implements FieldService {
 
         final ChangeDetector<FieldMeta> detector = new ChangeDetector<>(() -> fieldDao
                 .getFieldMeta(fieldId)
-                .orElseThrow(exceptionSupplier));
+                .<NoSuchEntityException>orElseThrow(exceptionSupplier));
 
         final long templateId = detector.updatedValue(FieldMeta::getTemplateId, update::getTemplateId);
         final String technicalName = detector.updatedValue(FieldMeta::getTechnicalName, update::getTechnicalName);

@@ -15,7 +15,6 @@ import ru.sbrf.docedit.exception.DBOperation;
 import ru.sbrf.docedit.exception.EntityType;
 import ru.sbrf.docedit.exception.NoSuchEntityException;
 import ru.sbrf.docedit.exception.NoSuchEntityInfo;
-import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.field.FieldValueHolder;
 import ru.sbrf.docedit.model.field.value.FieldType;
@@ -39,9 +38,6 @@ public class H2FieldDao implements FieldDao {
     private final static Logger LOGGER = LoggerFactory.getLogger(H2FieldDao.class);
 
     private final JdbcTemplate jdbcTemplate;
-
-    // TODO
-    private H2DocumentDao documentDao;
 
     @Autowired
     public H2FieldDao(JdbcTemplate jdbcTemplate) {
@@ -182,12 +178,12 @@ public class H2FieldDao implements FieldDao {
 
         if (queryResult.isEmpty()) {
             final Optional<FieldMeta> fieldMeta = getFieldMeta(fieldId);
-            final Optional<DocumentMeta> documentMeta = documentDao.getDocumentMeta(documentId);
+            final Optional<Long> documentMeta = getDocumentTemplateId(documentId);
 
             // if document or field not exist
             // OR if they have different template ids --> empty
             if (!documentMeta.isPresent() || !fieldMeta.isPresent() ||
-                    documentMeta.get().getTemplateId() != fieldMeta.get().getTemplateId())
+                    documentMeta.get() != fieldMeta.get().getTemplateId())
                 return Optional.empty();
 
             // otherwise --> field exist, value just null
@@ -205,6 +201,12 @@ public class H2FieldDao implements FieldDao {
                         readObject(rs.getBytes(2), FieldValue.class)), documentId)
                 .stream()
                 .collect(Collectors.toMap(FieldValueHolder::getFieldId, FieldValueHolder::getValue));
+    }
+
+    private Optional<Long> getDocumentTemplateId(long documentId) {
+        final String sql = "SELECT template_id FROM DOCUMENTS WHERE document_id=?";
+        final List<Long> queryResult = jdbcTemplate.query(sql, (rs, rn) -> rs.getLong(1), documentId);
+        return queryResult.isEmpty() ? Optional.empty() : Optional.of(queryResult.get(0));
     }
 
     private static class FieldMetaRowMapper implements RowMapper<FieldMeta> {
