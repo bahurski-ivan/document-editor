@@ -407,6 +407,25 @@ public class FieldServiceImplTest extends AbstractDbTest {
     @Test
     public void getNotSetDocumentValue() throws Exception {
         assertNull(fieldService.getDocumentField(2, 1)
-                .orElseThrow(AssertionFailedError::new));
+                .orElseThrow(AssertionFailedError::new).getValue());
+    }
+
+    @Test
+    public void getDocumentValueNonExistentDocument() throws Exception {
+        final long nonExistentDocumentId = 1000000;
+        assertFalse(fieldService.getDocumentField(nonExistentDocumentId, 1).isPresent());
+    }
+
+    @Test
+    public void getDocumentValueNonExistentField() throws Exception {
+        final long nonExistentFieldId = 1000000;
+        assertFalse(fieldService.getDocumentField(1, nonExistentFieldId).isPresent());
+    }
+
+    @Test
+    public void getDocumentValueNonExistentFieldAndDocument() throws Exception {
+        final long nonExistentFieldId = 1000000;
+        final long nonExistentDocumentId = 100000;
+        assertFalse(fieldService.getDocumentField(nonExistentDocumentId, nonExistentFieldId).isPresent());
     }
 }
