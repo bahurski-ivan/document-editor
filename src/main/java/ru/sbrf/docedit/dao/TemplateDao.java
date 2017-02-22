@@ -22,12 +22,14 @@ public interface TemplateDao {
 
     /**
      * Updates template by its id.
+     * <p>
+     * Note that this method will set all fields of template according to {@code newValue}.
      *
      * @param templateId id of template to update
-     * @param update     update info
+     * @param newValue   new template values
      * @return {@code true} if template has been updated
      */
-    boolean updateTemplate(long templateId, TemplateMeta.Update update);
+    boolean updateTemplate(long templateId, TemplateMeta newValue);
 
     /**
      * Lists all saved templates meta information.

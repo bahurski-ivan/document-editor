@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.DocumentDao;
-import ru.sbrf.docedit.exception.EmptyUpdate;
 import ru.sbrf.docedit.model.document.DocumentFull;
 import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.field.FieldFull;
@@ -58,33 +57,7 @@ public class H2DocumentDao implements DocumentDao {
     }
 
     @Override
-    public boolean updateDocument(long documentId, DocumentMeta.Update update) {
-        int updateSize = 0;
-        Optional<DocumentMeta> oldValue = null;
-
-        if (!update.getTemplateId().needToUpdate()) {
-            oldValue = getDocumentMeta(documentId);
-            if (!oldValue.isPresent()) return false;
-            update.getTemplateId().setValue(oldValue.get().getTemplateId());
-        } else ++updateSize;
-
-        if (!update.getDocumentName().needToUpdate()) {
-            oldValue = getDocumentMeta(documentId);
-            if (!oldValue.isPresent()) return false;
-            update.getDocumentName().setValue(oldValue.get().getDocumentName());
-        } else ++updateSize;
-
-        if (updateSize == 0)
-            throw new EmptyUpdate();
-
-        return updateDocument(documentId, new DocumentMeta(
-                documentId,
-                update.getTemplateId().getValue(),
-                update.getDocumentName().getValue()
-        ));
-    }
-
-    private boolean updateDocument(long documentId, DocumentMeta m) {
+    public boolean updateDocument(long documentId, DocumentMeta m) {
         final String sql = "UPDATE DOCUMENTS SET template_id=?, document_name=? WHERE document_id=?";
         return jdbcTemplate.update(sql, ps -> {
             ps.setLong(1, m.getTemplateId());
@@ -114,7 +87,7 @@ public class H2DocumentDao implements DocumentDao {
     public Optional<DocumentMeta> getDocumentMeta(long documentId) {
         final String sql = "SELECT document_id, template_id, document_name FROM DOCUMENTS WHERE document_id=?";
         final List<DocumentMeta> queryResult = jdbcTemplate.query(sql, DocumentMetaRowMapper.INSTANCE, documentId);
-        return queryResult.size() == 0 ? Optional.empty() : Optional.of(queryResult.get(0));
+        return queryResult.isEmpty() ? Optional.empty() : Optional.of(queryResult.get(0));
     }
 
     @Override

@@ -9,7 +9,7 @@ import ru.sbrf.docedit.dao.impl.h2.H2FieldDao;
 import ru.sbrf.docedit.model.field.FieldMeta;
 
 /**
- * Created by SBT-Bakhurskiy-IA on 21.02.2017.
+ * Logging aspect for field dao impl.
  */
 @Component
 @Aspect
@@ -36,19 +36,17 @@ public class FieldDaoLoggingAspect {
         }
     }
 
-
     @AfterReturning(value = "execution (public boolean ru.sbrf.docedit.dao.impl.h2." +
             "H2FieldDao.updateFieldMeta(..))", returning = "result")
     public void afterFieldUpdated(JoinPoint joinPoint, boolean result) {
         final Object[] args = joinPoint.getArgs();
         if (args.length == 2) {
             final long fieldId = (long) args[0];
-            final FieldMeta.Update update = (FieldMeta.Update) args[1];
-            final FieldMeta persisted = fieldDao.getFieldMeta(fieldId).orElse(null);
+            final FieldMeta newValue = (FieldMeta) args[1];
+            final FieldMeta persisted = result ? fieldDao.getFieldMeta(fieldId).orElse(null) : null;
 
-            LOGGER.info("FieldInfoUpdated: result -- " + result +
-                    " ; update -- " + update +
-                    " ; persisted -- " + persisted);
+            LOGGER.info("FieldInfoUpdated: " + (result ? ("toSave -- " + newValue + " ; persisted -- " + persisted)
+                    : "method returned false -- update failed"));
         }
     }
 }

@@ -22,12 +22,15 @@ public interface DocumentDao {
 
     /**
      * Updates document by its id.
+     * <p>
+     * Note that this method will fill all document information
+     * will be set according to {@code newValue}.
      *
      * @param documentId id of document to update
-     * @param update     update info
+     * @param newValue   new state of document with given id
      * @return {@code true} if document was successfully updated
      */
-    boolean updateDocument(long documentId, DocumentMeta.Update update);
+    boolean updateDocument(long documentId, DocumentMeta newValue);
 
     /**
      * Lists all saved documents.

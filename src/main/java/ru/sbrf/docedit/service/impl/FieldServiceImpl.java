@@ -6,26 +6,26 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.DocumentDao;
 import ru.sbrf.docedit.dao.FieldDao;
-import ru.sbrf.docedit.exception.DBOperation;
-import ru.sbrf.docedit.exception.EntityType;
-import ru.sbrf.docedit.exception.NoSuchEntityException;
-import ru.sbrf.docedit.exception.NoSuchEntityInfo;
+import ru.sbrf.docedit.exception.*;
 import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.field.FieldFull;
 import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.field.FieldValueHolder;
+import ru.sbrf.docedit.model.field.value.FieldType;
 import ru.sbrf.docedit.model.field.value.FieldValue;
 import ru.sbrf.docedit.service.FieldService;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
  * Created by SBT-Bakhurskiy-IA on 13.02.2017.
  */
 @Component
+@Transactional
 public class FieldServiceImpl implements FieldService {
     private final FieldDao fieldDao;
     private final DocumentDao documentDao;
@@ -37,7 +37,6 @@ public class FieldServiceImpl implements FieldService {
     }
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void updateFieldValue(long documentId, long fieldId, FieldValue value) {
         fieldDao.setFieldValue(documentId, fieldId, value);
     }
@@ -58,7 +57,7 @@ public class FieldServiceImpl implements FieldService {
     }
 
     @Override
-    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
+    @Transactional(readOnly = true, isolation = Isolation.SERIALIZABLE)
     public List<FieldFull> getAllDocumentFields(long documentId) {
         final Optional<DocumentMeta> dd = documentDao.getDocumentMeta(documentId);
 
@@ -75,20 +74,46 @@ public class FieldServiceImpl implements FieldService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public FieldMeta create(FieldMeta meta) {
         final long id = fieldDao.createFieldMeta(meta);
-        return fieldDao.getFieldMeta(id).orElseThrow(() -> NoSuchEntityException.ofSingle(new NoSuchEntityInfo(meta.getFieldId(), EntityType.FIELD, DBOperation.CREATE)));
+        return fieldDao.getFieldMeta(id).orElseThrow(() ->
+                NoSuchEntityException.ofSingle(new NoSuchEntityInfo(meta.getFieldId(), EntityType.FIELD, DBOperation.CREATE)));
     }
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void update(long fieldId, FieldMeta.Update update) {
-        if (!fieldDao.updateFieldMeta(fieldId, update))
-            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(fieldId, EntityType.FIELD, DBOperation.UPDATE));
+        final Supplier<NoSuchEntityException> exceptionSupplier =
+                () -> NoSuchEntityException.ofSingle(new NoSuchEntityInfo(fieldId, EntityType.FIELD, DBOperation.UPDATE));
+
+        final ChangeDetector<FieldMeta> detector = new ChangeDetector<>(() -> fieldDao
+                .getFieldMeta(fieldId)
+                .orElseThrow(exceptionSupplier));
+
+        final long templateId = detector.updatedValue(FieldMeta::getTemplateId, update::getTemplateId);
+        final String technicalName = detector.updatedValue(FieldMeta::getTechnicalName, update::getTechnicalName);
+        final String displayName = detector.updatedValue(FieldMeta::getDisplayName, update::getDisplayName);
+        final FieldType type = detector.updatedValue(FieldMeta::getType, update::getType);
+        final int ordinal = detector.updatedValue(FieldMeta::getOrdinal, update::getOrdinal);
+
+        if (!detector.notEmpty())
+            throw new EmptyUpdate();
+
+        final FieldMeta newValue = new FieldMeta(
+                fieldId,
+                templateId,
+                technicalName,
+                displayName,
+                type,
+                ordinal
+        );
+
+        if (!fieldDao.updateFieldMeta(fieldId, newValue))
+            throw exceptionSupplier.get();
     }
 
     @Override
-    @Transactional
     public void remove(long fieldId) {
         if (!fieldDao.removeFieldMeta(fieldId))
             throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(fieldId, EntityType.FIELD, DBOperation.REMOVE));

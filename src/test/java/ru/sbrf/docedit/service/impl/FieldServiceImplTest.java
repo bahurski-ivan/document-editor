@@ -1,5 +1,6 @@
 package ru.sbrf.docedit.service.impl;
 
+import com.github.springtestdbunit.annotation.DatabaseOperation;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import org.junit.Test;
@@ -30,7 +31,7 @@ import static ru.sbrf.docedit.service.impl.DataSet.*;
  * Created by SBT-Bakhurskiy-IA on 14.02.2017.
  */
 @DatabaseSetup("classpath:dataset/ServicesDataSet.xml")
-@DatabaseTearDown("classpath:dataset/ServicesDataSet.xml")
+@DatabaseTearDown(value = "classpath:dataset/ServicesDataSet.xml", type = DatabaseOperation.DELETE_ALL)
 public class FieldServiceImplTest extends AbstractDbTest {
     @Autowired
     private FieldServiceImpl fieldService;

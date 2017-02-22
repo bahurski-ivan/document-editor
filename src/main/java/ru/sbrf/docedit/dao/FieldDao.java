@@ -37,12 +37,14 @@ public interface FieldDao {
 
     /**
      * Updates field meta with new value.
+     * <p>
+     * Note that this method will set all fields according to {@code newValue}.
      *
-     * @param fieldId id of the field to update
-     * @param update  update information
+     * @param fieldId  id of the field to update
+     * @param newValue new value of field with field id
      * @return {@code true} if field meta was successfully updated
      */
-    boolean updateFieldMeta(long fieldId, FieldMeta.Update update);
+    boolean updateFieldMeta(long fieldId, FieldMeta newValue);
 
     /**
      * Returns field with given {@code fieldId}.

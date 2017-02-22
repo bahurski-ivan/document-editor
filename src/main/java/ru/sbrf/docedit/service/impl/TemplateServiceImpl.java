@@ -2,13 +2,9 @@ package ru.sbrf.docedit.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.TemplateDao;
-import ru.sbrf.docedit.exception.DBOperation;
-import ru.sbrf.docedit.exception.EntityType;
-import ru.sbrf.docedit.exception.NoSuchEntityException;
-import ru.sbrf.docedit.exception.NoSuchEntityInfo;
+import ru.sbrf.docedit.exception.*;
 import ru.sbrf.docedit.model.pagination.Order;
 import ru.sbrf.docedit.model.pagination.Page;
 import ru.sbrf.docedit.model.template.TemplateFull;
@@ -16,12 +12,13 @@ import ru.sbrf.docedit.model.template.TemplateMeta;
 import ru.sbrf.docedit.service.TemplateService;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Created by SBT-Bakhurskiy-IA on 13.02.2017.
  */
 @Component
-@Transactional(isolation = Isolation.READ_COMMITTED)
+@Transactional
 public class TemplateServiceImpl implements TemplateService {
     private final TemplateDao templateDao;
 
@@ -31,7 +28,6 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public TemplateMeta create(String templateName) {
         final long id = templateDao.createTemplate(new TemplateMeta(-1L, templateName));
         return new TemplateMeta(id, templateName);
@@ -39,8 +35,20 @@ public class TemplateServiceImpl implements TemplateService {
 
     @Override
     public void update(long templateId, TemplateMeta.Update update) {
-        if (!templateDao.updateTemplate(templateId, update))
-            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(templateId, EntityType.TEMPLATE, DBOperation.UPDATE));
+        final Supplier<NoSuchEntityException> exceptionSupplier =
+                () -> NoSuchEntityException.ofSingle(new NoSuchEntityInfo(templateId, EntityType.TEMPLATE, DBOperation.UPDATE));
+
+        final ChangeDetector<TemplateMeta> detector = new ChangeDetector<>(() -> templateDao
+                .getTemplate(templateId)
+                .orElseThrow(exceptionSupplier));
+
+        final String templateName = detector.updatedValue(TemplateMeta::getTemplateName, update::getTemplateName);
+
+        if (!detector.notEmpty())
+            throw new EmptyUpdate();
+
+        if (!templateDao.updateTemplate(templateId, new TemplateMeta(templateId, templateName)))
+            exceptionSupplier.get();
     }
 
     @Override

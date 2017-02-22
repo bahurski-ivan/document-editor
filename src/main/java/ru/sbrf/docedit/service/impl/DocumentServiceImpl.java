@@ -5,10 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.DocumentDao;
-import ru.sbrf.docedit.exception.DBOperation;
-import ru.sbrf.docedit.exception.EntityType;
-import ru.sbrf.docedit.exception.NoSuchEntityException;
-import ru.sbrf.docedit.exception.NoSuchEntityInfo;
+import ru.sbrf.docedit.exception.*;
 import ru.sbrf.docedit.model.document.DocumentFull;
 import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.pagination.Order;
@@ -22,7 +19,7 @@ import java.util.function.Supplier;
  * Created by SBT-Bakhurskiy-IA on 13.02.2017.
  */
 @Component
-@Transactional(isolation = Isolation.READ_COMMITTED)
+@Transactional
 public class DocumentServiceImpl implements DocumentService {
     private final DocumentDao documentDao;
 
@@ -44,10 +41,22 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void update(long documentId, DocumentMeta.Update update) {
-        final Supplier<NoSuchEntityException> exceptionSupplier = () -> NoSuchEntityException.ofSingle(new NoSuchEntityInfo(documentId, EntityType.DOCUMENT, DBOperation.UPDATE));
-        final DocumentMeta meta = documentDao.getDocumentMeta(documentId).orElseThrow(exceptionSupplier);
-        if (!documentDao.updateDocument(documentId, update))
+        final Supplier<NoSuchEntityException> exceptionSupplier = () ->
+                NoSuchEntityException.ofSingle(new NoSuchEntityInfo(documentId, EntityType.DOCUMENT, DBOperation.UPDATE));
+
+        final ChangeDetector<DocumentMeta> detector = new ChangeDetector<>(() -> documentDao
+                .getDocumentMeta(documentId)
+                .orElseThrow(exceptionSupplier));
+
+        final long templateId = detector.updatedValue(DocumentMeta::getTemplateId, update::getTemplateId);
+        final String documentName = detector.updatedValue(DocumentMeta::getDocumentName, update::getDocumentName);
+
+        if (!detector.notEmpty())
+            throw new EmptyUpdate();
+
+        if (!documentDao.updateDocument(documentId, new DocumentMeta(documentId, templateId, documentName)))
             throw exceptionSupplier.get();
     }
 
@@ -64,7 +73,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    @Transactional(readOnly = true, isolation = Isolation.SERIALIZABLE)
+    @Transactional(readOnly = true)
     public Optional<DocumentFull> getFull(long documentId) {
         return documentDao.getFullDocument(documentId);
     }

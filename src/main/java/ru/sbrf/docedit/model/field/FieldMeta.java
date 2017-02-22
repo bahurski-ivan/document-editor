@@ -115,6 +115,7 @@ public class FieldMeta {
         private final FieldUpdate<FieldType> type = new FieldUpdate<>();
         private final FieldUpdate<Integer> ordinal = new FieldUpdate<>(Integer.MAX_VALUE);
 
+
         public FieldUpdate<Long> getTemplateId() {
             return templateId;
         }
@@ -159,6 +160,7 @@ public class FieldMeta {
             this.ordinal.setValue(ordinal);
             return this;
         }
+
 
         @Override
         public String toString() {

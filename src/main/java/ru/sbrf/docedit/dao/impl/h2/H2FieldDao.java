@@ -11,7 +11,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.FieldDao;
-import ru.sbrf.docedit.exception.*;
+import ru.sbrf.docedit.exception.DBOperation;
+import ru.sbrf.docedit.exception.EntityType;
+import ru.sbrf.docedit.exception.NoSuchEntityException;
+import ru.sbrf.docedit.exception.NoSuchEntityInfo;
 import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.field.FieldValueHolder;
 import ru.sbrf.docedit.model.field.value.FieldType;
@@ -80,74 +83,7 @@ public class H2FieldDao implements FieldDao {
     }
 
     @Override
-    public boolean updateFieldMeta(long fieldId, FieldMeta.Update update) {
-        int updateSize = 0;
-        Optional<FieldMeta> oldValue = null;
-
-        long templateId;
-        String technicalName, displayName;
-        FieldType type;
-        int ordinal;
-
-        if (update.getTemplateId().needToUpdate()) {
-            templateId = update.getTemplateId().getValue();
-            ++updateSize;
-        } else {
-            oldValue = getFieldMeta(fieldId);
-            if (!oldValue.isPresent()) return false;
-            templateId = oldValue.get().getTemplateId();
-        }
-
-        if (update.getTechnicalName().needToUpdate()) {
-            technicalName = update.getTechnicalName().getValue();
-            ++updateSize;
-        } else {
-            if (oldValue == null) oldValue = getFieldMeta(fieldId);
-            if (!oldValue.isPresent()) return false;
-            technicalName = oldValue.get().getTechnicalName();
-        }
-
-        if (update.getDisplayName().needToUpdate()) {
-            displayName = update.getDisplayName().getValue();
-            ++updateSize;
-        } else {
-            if (oldValue == null) oldValue = getFieldMeta(fieldId);
-            if (!oldValue.isPresent()) return false;
-            displayName = oldValue.get().getDisplayName();
-        }
-
-        if (update.getType().needToUpdate()) {
-            type = update.getType().getValue();
-            ++updateSize;
-        } else {
-            if (oldValue == null) oldValue = getFieldMeta(fieldId);
-            if (!oldValue.isPresent()) return false;
-            type = oldValue.get().getType();
-        }
-
-        if (update.getOrdinal().needToUpdate()) {
-            ordinal = update.getOrdinal().getValue();
-            ++updateSize;
-        } else {
-            if (oldValue == null) oldValue = getFieldMeta(fieldId);
-            if (!oldValue.isPresent()) return false;
-            ordinal = oldValue.get().getOrdinal();
-        }
-
-        if (updateSize == 0)
-            throw new EmptyUpdate();
-
-        return updateFieldMeta(fieldId, new FieldMeta(
-                fieldId,
-                templateId,
-                technicalName,
-                displayName,
-                type,
-                ordinal
-        ));
-    }
-
-    private boolean updateFieldMeta(long fieldId, FieldMeta m) {
+    public boolean updateFieldMeta(long fieldId, FieldMeta m) {
         final String sql = "UPDATE FIELDS_INFO SET template_id=?, technical_name=?, " +
                 "display_name=?, type=?, ordinal=? WHERE field_id=?";
         return jdbcTemplate.update(sql, ps -> {

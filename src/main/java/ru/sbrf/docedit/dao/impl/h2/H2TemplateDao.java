@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sbrf.docedit.dao.TemplateDao;
-import ru.sbrf.docedit.exception.EmptyUpdate;
 import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.pagination.Order;
 import ru.sbrf.docedit.model.pagination.Page;
@@ -58,28 +57,13 @@ public class H2TemplateDao implements TemplateDao {
     }
 
     @Override
-    public boolean updateTemplate(long templateId, TemplateMeta.Update update) {
-        int updateSize = 0;
-
-        if (!update.getTemplateName().needToUpdate()) {
-            Optional<TemplateMeta> meta = getTemplate(templateId);
-            if (!meta.isPresent()) return false;
-            update.getTemplateName().setValue(meta.get().getTemplateName());
-        } else ++updateSize;
-
-        if (updateSize == 0)
-            throw new EmptyUpdate();
-
-        return updateTemplate(new TemplateMeta(templateId, update.getTemplateName().getValue()));
-    }
-
-    private boolean updateTemplate(TemplateMeta templateMeta) {
+    public boolean updateTemplate(long templateId, TemplateMeta templateMeta) {
         final String sql = "UPDATE DOCUMENT_TEMPLATES " +
                 "SET template_name=? " +
                 "WHERE template_id=?";
         return jdbcTemplate.update(sql, ps -> {
             ps.setString(1, templateMeta.getTemplateName());
-            ps.setLong(2, templateMeta.getTemplateId());
+            ps.setLong(2, templateId);
         }) == 1;
     }
 
