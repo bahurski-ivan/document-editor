@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<dataset>
-    <DOCUMENT_TEMPLATES template_id="0" template_name="template#1"/>
-    <DOCUMENT_TEMPLATES template_id="1" template_name="template#2"/>
-
-    <DOCUMENTS template_id="1" document_id="1" document_name="document#2"/>
-    <DOCUMENTS template_id="1" document_id="2" document_name="document#3"/>
-    <DOCUMENTS template_id="1" document_id="3" document_name="document#4"/>
-</dataset>
