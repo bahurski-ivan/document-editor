@@ -18,6 +18,10 @@ public class NoSuchEntityException extends RuntimeException {
         return new NoSuchEntityException(Collections.singletonList(info));
     }
 
+    public List<NoSuchEntityInfo> getMissingEntities() {
+        return missingEntities;
+    }
+
     @Override
     public String toString() {
         return "NoSuchEntityException{" +
