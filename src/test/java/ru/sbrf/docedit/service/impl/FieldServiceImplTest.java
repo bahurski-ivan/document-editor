@@ -3,6 +3,7 @@ package ru.sbrf.docedit.service.impl;
 import com.github.springtestdbunit.annotation.DatabaseOperation;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
+import junit.framework.AssertionFailedError;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.sbrf.docedit.AbstractDbTest;
@@ -401,5 +402,11 @@ public class FieldServiceImplTest extends AbstractDbTest {
                 .mapToObj(i -> i).collect(Collectors.toMap(listOfFieldIds::get, i -> i));
 
         assertEquals(expected, fieldService.getOrdinalMap(templateFull.getTemplateMeta().getTemplateId()));
+    }
+
+    @Test
+    public void getNotSetDocumentValue() throws Exception {
+        assertNull(fieldService.getDocumentField(2, 1)
+                .orElseThrow(AssertionFailedError::new));
     }
 }

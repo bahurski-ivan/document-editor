@@ -15,6 +15,7 @@ import ru.sbrf.docedit.exception.DBOperation;
 import ru.sbrf.docedit.exception.EntityType;
 import ru.sbrf.docedit.exception.NoSuchEntityException;
 import ru.sbrf.docedit.exception.NoSuchEntityInfo;
+import ru.sbrf.docedit.model.document.DocumentMeta;
 import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.field.FieldValueHolder;
 import ru.sbrf.docedit.model.field.value.FieldType;
@@ -38,6 +39,9 @@ public class H2FieldDao implements FieldDao {
     private final static Logger LOGGER = LoggerFactory.getLogger(H2FieldDao.class);
 
     private final JdbcTemplate jdbcTemplate;
+
+    // TODO
+    private H2DocumentDao documentDao;
 
     @Autowired
     public H2FieldDao(JdbcTemplate jdbcTemplate) {
@@ -127,19 +131,33 @@ public class H2FieldDao implements FieldDao {
         return Optional.ofNullable(result);
     }
 
+    private boolean checkDocumentExist(long documentId) {
+        final List<Integer> queryResult = jdbcTemplate.query("SELECT COUNT(*) FROM DOCUMENTS WHERE document_id=?",
+                (rs, rn) -> rs.getInt(1), documentId);
+        assert !queryResult.isEmpty();
+        return queryResult.get(0) == 1;
+    }
+
+    private boolean checkFieldExist(long fieldId) {
+        final List<Integer> queryResult = jdbcTemplate.query("SELECT COUNT(*) FROM FIELDS_INFO WHERE field_id=?",
+                (rs, rn) -> rs.getInt(1), fieldId);
+        assert !queryResult.isEmpty();
+        return queryResult.get(0) == 1;
+    }
+
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public boolean setFieldValue(long documentId, long fieldId, FieldValue newValue) {
-        boolean documentExist = jdbcTemplate.query("SELECT COUNT(*) FROM DOCUMENTS WHERE document_id=?",
-                (rs, rn) -> rs.getInt(1), documentId).get(0) == 1;
-        boolean fieldExist = jdbcTemplate.query("SELECT COUNT(*) FROM FIELDS_INFO WHERE field_id=?",
-                (rs, rn) -> rs.getInt(1), fieldId).get(0) == 1;
+        final List<NoSuchEntityInfo> errors = new ArrayList<>();
 
-        if (!documentExist)
-            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(documentId, EntityType.DOCUMENT, DBOperation.UPDATE));
+        if (!checkDocumentExist(documentId))
+            errors.add(new NoSuchEntityInfo(documentId, EntityType.DOCUMENT, DBOperation.UPDATE));
 
-        if (!fieldExist)
-            throw NoSuchEntityException.ofSingle(new NoSuchEntityInfo(fieldId, EntityType.FIELD, DBOperation.UPDATE));
+        if (!checkFieldExist(fieldId))
+            errors.add(new NoSuchEntityInfo(fieldId, EntityType.FIELD, DBOperation.UPDATE));
+
+        if (!errors.isEmpty())
+            throw new NoSuchEntityException(errors);
 
         int rowsAffected;
         String sql = "SELECT value FROM FIELD_VALUES WHERE field_id=? AND document_id=?";
@@ -159,11 +177,24 @@ public class H2FieldDao implements FieldDao {
     public Optional<FieldValueHolder> getFieldValue(long documentId, long fieldId) {
         final String sql = "SELECT value FROM FIELD_VALUES WHERE document_id=? AND field_id=?";
         final List<FieldValue> queryResult = jdbcTemplate.query(sql, (rs, rn) ->
-                        SerializationHelper.readObject(rs.getBytes(1), FieldValue.class),
-                documentId, fieldId);
+                SerializationHelper.readObject(rs.getBytes(1),
+                        FieldValue.class), documentId, fieldId);
 
-        return queryResult.isEmpty() ? Optional.empty() :
-                Optional.of(new FieldValueHolder(fieldId, documentId, queryResult.get(0)));
+        if (queryResult.isEmpty()) {
+            final Optional<FieldMeta> fieldMeta = getFieldMeta(fieldId);
+            final Optional<DocumentMeta> documentMeta = documentDao.getDocumentMeta(documentId);
+
+            // if document or field not exist
+            // OR if they have different template ids --> empty
+            if (!documentMeta.isPresent() || !fieldMeta.isPresent() ||
+                    documentMeta.get().getTemplateId() != fieldMeta.get().getTemplateId())
+                return Optional.empty();
+
+            // otherwise --> field exist, value just null
+            return Optional.of(new FieldValueHolder(fieldId, documentId, null));
+        }
+
+        return Optional.of(new FieldValueHolder(fieldId, documentId, queryResult.get(0)));
     }
 
     @Override
