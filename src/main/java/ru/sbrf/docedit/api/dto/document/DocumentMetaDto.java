@@ -14,19 +14,16 @@ public class DocumentMetaDto {
     @Min(0)
     @JsonProperty(value = "document_id")
     private Long documentId;
-
-    @NotNull
     @Min(0)
     @JsonProperty(value = "template_id", required = true)
     private Long templateId;
-
     @NotNull
     @NotBlank
     @JsonProperty(value = "document_name", required = true)
     private String documentName;
 
 
-    public DocumentMetaDto(Long documentId, long templateId, String documentName) {
+    DocumentMetaDto(Long documentId, long templateId, String documentName) {
         this.documentId = documentId;
         this.templateId = templateId;
         this.documentName = documentName;

@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by SBT-Bakhurskiy-IA on 13.02.2017.
@@ -129,5 +130,15 @@ public class FieldServiceImpl implements FieldService {
     @Transactional(readOnly = true)
     public List<FieldMeta> getAll(long templateId) {
         return fieldDao.getTemplateFields(templateId);
+    }
+
+    @Override
+    public Map<Long, Integer> getOrdinalMap(long templateId) {
+        final List<Long> orderedFieldIds = fieldDao.getOrdinals(templateId).orElseThrow(
+                () -> NoSuchEntityException.ofSingle(new NoSuchEntityInfo(templateId, EntityType.TEMPLATE, DBOperation.GET)));
+
+        return IntStream.range(0, orderedFieldIds.size())
+                .mapToObj(i -> i).collect(Collectors.
+                        toMap(orderedFieldIds::get, i -> i));
     }
 }

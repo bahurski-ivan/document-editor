@@ -47,7 +47,8 @@ public class DocumentController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(value = "/{document_id}", consumes = APPLICATION_JSON_VALUE)
     public void update(@PathVariable("document_id") long documentId, @RequestBody @Valid DocumentMetaDto dto) {
-        documentService.update(documentId, dto.getDocumentName());
+        documentService.update(documentId, new DocumentMeta.Update()
+                .setDocumentName(dto.getDocumentName()));
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

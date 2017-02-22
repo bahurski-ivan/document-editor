@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import ru.sbrf.docedit.api.dto.template.TemplateFullDto;
 import ru.sbrf.docedit.api.dto.template.TemplateMetaDto;
+import ru.sbrf.docedit.api.dto.template.TemplateMetaUpdateDto;
 import ru.sbrf.docedit.api.dto.value.PageResultDto;
 import ru.sbrf.docedit.model.pagination.Order;
 import ru.sbrf.docedit.model.template.TemplateFull;
@@ -47,8 +48,8 @@ public class TemplateController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping(value = "/{template_id}", consumes = APPLICATION_JSON_VALUE)
-    public void update(@PathVariable("template_id") long templateId, @RequestBody @Valid TemplateMetaDto dto) {
-        templateService.update(templateId, dto.getTemplateName());
+    public void update(@PathVariable("template_id") long templateId, @RequestBody @Valid TemplateMetaUpdateDto dto) {
+        templateService.update(templateId, dto.toEntity());
     }
 
     @GetMapping(value = "/{template_id}", produces = APPLICATION_JSON_VALUE)

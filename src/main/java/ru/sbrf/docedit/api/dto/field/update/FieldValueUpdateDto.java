@@ -7,15 +7,14 @@ import ru.sbrf.docedit.model.field.value.FieldType;
 import javax.validation.constraints.NotNull;
 
 /**
- * Created by SBT-Bakhurskiy-IA on 16.02.2017.
+ * DTO for field value update request.
  */
 public class FieldValueUpdateDto {
     @NotNull
-    @JsonProperty(value = "value_type", required = true)
+    @JsonProperty(value = "type", required = true)
     private FieldType type;
     @JsonProperty(value = "value", required = true)
     private FieldValueDto valueDto;
-
 
     public FieldValueUpdateDto(FieldType type, FieldValueDto valueDto) {
         this.type = type;

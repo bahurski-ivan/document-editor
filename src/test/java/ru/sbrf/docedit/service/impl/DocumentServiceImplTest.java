@@ -28,6 +28,8 @@ import static ru.sbrf.docedit.service.impl.DataSet.*;
 public class DocumentServiceImplTest extends AbstractDbTest {
     @Autowired
     private DocumentServiceImpl documentService;
+    @Autowired
+    private FieldServiceImpl fieldService;
 
     @Test
     public void create() throws Exception {
@@ -129,4 +131,9 @@ public class DocumentServiceImplTest extends AbstractDbTest {
         assertEquals(expected, documentService.getFull(1).orElse(null));
     }
 
+    @Test
+    public void getFullTestOrder() throws Exception {
+        final DocumentFull expected = ALL_FULL_DOCUMENTS.get(0);
+        assertEquals(expected, documentService.getFull(expected.getDocumentMeta().getDocumentId()).orElse(null));
+    }
 }

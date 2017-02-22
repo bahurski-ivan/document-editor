@@ -5,6 +5,7 @@ import ru.sbrf.docedit.model.field.FieldMeta;
 import ru.sbrf.docedit.model.field.value.FieldValue;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -76,4 +77,12 @@ public interface FieldService {
      * Note that this method returns fields in there display order.
      */
     List<FieldMeta> getAll(long templateId);
+
+    /**
+     * Returns map fieldId {@literal ->} ordinal.
+     *
+     * @param templateId target template
+     * @return mapping fieldId {@literal ->} ordinal
+     */
+    Map<Long, Integer> getOrdinalMap(long templateId);
 }

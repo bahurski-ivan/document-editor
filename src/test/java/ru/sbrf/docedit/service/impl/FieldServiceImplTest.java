@@ -22,7 +22,9 @@ import ru.sbrf.docedit.service.TemplateService;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 import static ru.sbrf.docedit.service.impl.DataSet.*;
@@ -253,10 +255,38 @@ public class FieldServiceImplTest extends AbstractDbTest {
                 original.getTechnicalName(),
                 original.getDisplayName(),
                 original.getType(),
-                template.getFields().size()
+                template.getFields().size() - 1
         );
 
         genericUpdateTest(expected, original);
+
+        final List<FieldMeta> fields = templateService.getFull(template.getTemplateMeta()
+                .getTemplateId())
+                .orElseThrow(AssertionError::new)
+                .getFields();
+
+        assertEquals(fields.size() - 1, fields.indexOf(expected));
+    }
+
+    @Test
+    public void updateOrdinalOutOfRangeHigh() throws Exception {
+        final FieldMeta original = ALL_FIELDS_META.get(0);
+        final TemplateFull template = ALL_FULL_TEMPLATES.stream()
+                .filter(t -> t.getTemplateMeta().getTemplateId() == original.getTemplateId())
+                .findFirst().orElseThrow(AssertionError::new);
+
+        final FieldMeta expected = new FieldMeta(
+                original.getFieldId(),
+                original.getTemplateId(),
+                original.getTechnicalName(),
+                original.getDisplayName(),
+                original.getType(),
+                template.getFields().size() - 1
+        );
+
+        fieldService.update(original.getFieldId(), new FieldMeta.Update().setOrdinal(template.getFields().size() + 100));
+
+        assertEquals(expected, fieldService.getOne(original.getFieldId()).orElse(null));
 
         final List<FieldMeta> fields = templateService.getFull(template.getTemplateMeta()
                 .getTemplateId())
@@ -340,5 +370,36 @@ public class FieldServiceImplTest extends AbstractDbTest {
     @Test(expected = NoSuchEntityException.class)
     public void updateNonExistent() throws Exception {
         fieldService.update(10000, new FieldMeta.Update().setTechnicalName("------------"));
+    }
+
+    @Test
+    public void getOrdinals() throws Exception {
+        final TemplateFull templateFull = ALL_FULL_TEMPLATES.get(0);
+        final List<Long> listOfFieldIds = templateFull.getFields().stream()
+                .map(FieldMeta::getFieldId)
+                .collect(Collectors.toList());
+
+        final Map<Long, Integer> expected = IntStream.range(0, listOfFieldIds.size())
+                .mapToObj(i -> i).collect(Collectors.toMap(listOfFieldIds::get, i -> i));
+
+        assertEquals(expected, fieldService.getOrdinalMap(templateFull.getTemplateMeta().getTemplateId()));
+    }
+
+    @Test
+    public void getOrdinalsAfterChange() throws Exception {
+        final TemplateFull templateFull = ALL_FULL_TEMPLATES.get(0);
+        final List<Long> listOfFieldIds = templateFull.getFields().stream()
+                .map(FieldMeta::getFieldId)
+                .collect(Collectors.toList());
+
+        final long swapId = listOfFieldIds.get(1);
+        listOfFieldIds.remove(swapId);
+        listOfFieldIds.add(0, swapId);
+        fieldService.update(swapId, new FieldMeta.Update().setOrdinal(0));
+
+        final Map<Long, Integer> expected = IntStream.range(0, listOfFieldIds.size())
+                .mapToObj(i -> i).collect(Collectors.toMap(listOfFieldIds::get, i -> i));
+
+        assertEquals(expected, fieldService.getOrdinalMap(templateFull.getTemplateMeta().getTemplateId()));
     }
 }

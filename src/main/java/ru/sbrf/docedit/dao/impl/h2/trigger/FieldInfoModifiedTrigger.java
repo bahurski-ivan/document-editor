@@ -104,6 +104,12 @@ public class FieldInfoModifiedTrigger implements Trigger {
 
                 ordinals.add(ordinal, fieldId);
                 updateOrdinals(conn, templateId, ordinals);
+
+                try (final PreparedStatement ps = conn.prepareStatement("UPDATE FIELDS_INFO SET ordinal=? WHERE field_id=?")) {
+                    ps.setInt(1, ordinal);
+                    ps.setLong(2, fieldId);
+                    ps.executeUpdate();
+                }
                 newRow[5] = ordinal;
             }
         }

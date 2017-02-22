@@ -41,13 +41,13 @@ public class FieldController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public HttpEntity<FieldMetaDto> create(@RequestBody @Valid FieldMetaDto dto) {
-        return ok(FieldMetaDto.toDto(fieldService.create(dto.getTemplateId(), dto.getTechnicalName(), dto.getDisplayName(), dto.getType())));
+        return ok(FieldMetaDto.toDto(fieldService.create(FieldMetaDto.fromDto(dto))));
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/{field_id}")
     public void update(@PathVariable("field_id") long fieldId, @RequestBody @Valid FieldMetaUpdateDto dto) {
-        fieldService.update(fieldId, dto.getTechnicalName(), dto.getDisplayName(), dto.getType(), dto.getOrdinal());
+        fieldService.update(fieldId, dto.toEntity());
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
