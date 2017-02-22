@@ -1,0 +1,395 @@
+{
+  "variables": [],
+  "info": {
+    "name": "document-edit-api",
+    "_postman_id": "219fc607-195a-b087-0251-4fc93f2952a8",
+    "description": "",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "document",
+      "description": "",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "url": "localhost:8080/document",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\t\n\t\"template_id\": 0,\n\t\"document_name\": \"document#0\"\n}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "url": "localhost:8080/document/0",
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\t\n\t\"document_name\": \"document#0\"\n}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "remove",
+          "request": {
+            "url": "localhost:8080/document/0",
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template_name\": \"template#0_newnewne\"}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "url": "localhost:8080/document/0",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template_name\": \"template#0_newnewne\"}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "list",
+          "request": {
+            "url": "localhost:8080/document?page_no=0&page_size=3",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template_name\": \"template#0\"}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "getFull",
+          "request": {
+            "url": "localhost:8080/document/0?full=true",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template_name\": \"template#0_newnewne\"}"
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "document-field",
+      "description": "",
+      "item": [
+        {
+          "name": "get document field",
+          "request": {
+            "url": "localhost:8080/field/0",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"technical_name\": \"field#0__new\",\n  \"display_name\": \"field#0__new\",\n  \"field_type\": \"TEXTAREA\",\n  \"field_ordinal\": 0\n}"
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "template",
+      "description": "",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "url": "localhost:8080/template",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template_name\": \"template#0\"}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "list",
+          "request": {
+            "url": "localhost:8080/template?page_no=0&page_size=2",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template_name\": \"template#0\"}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "url": "localhost:8080/template/1",
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template_name\": \"template#0_newnewne\"}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "remove",
+          "request": {
+            "url": "localhost:8080/template/1",
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template_name\": \"template#0_newnewne\"}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "url": "localhost:8080/template/0",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template_name\": \"template#0_newnewne\"}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "getFull",
+          "request": {
+            "url": "localhost:8080/template/0?full=true",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template_name\": \"template#0_newnewne\"}"
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "template-field",
+      "description": "",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "url": "localhost:8080/field",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\t\n\t\"technical_name\": \"field#0\",\n\t\"display_name\": \"field#0\",\n\t\"template_id\": 0,\n\t\"field_type\": \"INPUT\"\n}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "url": "localhost:8080/field/0",
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"technical_name\": \"field#0__new\",\n  \"display_name\": \"field#0__new\",\n  \"field_type\": \"TEXTAREA\",\n  \"field_ordinal\": 0\n}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "url": "localhost:8080/field/0",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"technical_name\": \"field#0__new\",\n  \"display_name\": \"field#0__new\",\n  \"field_type\": \"TEXTAREA\",\n  \"field_ordinal\": 0\n}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "remove",
+          "request": {
+            "url": "localhost:8080/field/0",
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"technical_name\": \"field#0__new\",\n  \"display_name\": \"field#0__new\",\n  \"field_type\": \"TEXTAREA\",\n  \"field_ordinal\": 0\n}"
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "getAll",
+          "request": {
+            "url": "localhost:8080/field/template/0",
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "description": ""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"technical_name\": \"field#0__new\",\n  \"display_name\": \"field#0__new\",\n  \"field_type\": \"TEXTAREA\",\n  \"field_ordinal\": 0\n}"
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
