@@ -48,7 +48,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         final ChangeDetector<DocumentMeta> detector = new ChangeDetector<>(() -> documentDao
                 .getDocumentMeta(documentId)
-                .orElseThrow(exceptionSupplier));
+                .<NoSuchEntityException>orElseThrow(exceptionSupplier));
 
         final long templateId = detector.updatedValue(DocumentMeta::getTemplateId, update::getTemplateId);
         final String documentName = detector.updatedValue(DocumentMeta::getDocumentName, update::getDocumentName);

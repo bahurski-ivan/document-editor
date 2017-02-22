@@ -40,7 +40,7 @@ public class TemplateServiceImpl implements TemplateService {
 
         final ChangeDetector<TemplateMeta> detector = new ChangeDetector<>(() -> templateDao
                 .getTemplate(templateId)
-                .orElseThrow(exceptionSupplier));
+                .<NoSuchEntityException>orElseThrow(exceptionSupplier));
 
         final String templateName = detector.updatedValue(TemplateMeta::getTemplateName, update::getTemplateName);
 
@@ -48,7 +48,7 @@ public class TemplateServiceImpl implements TemplateService {
             throw new EmptyUpdate();
 
         if (!templateDao.updateTemplate(templateId, new TemplateMeta(templateId, templateName)))
-            exceptionSupplier.get();
+            throw exceptionSupplier.get();
     }
 
     @Override
